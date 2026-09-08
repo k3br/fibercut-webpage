@@ -1,0 +1,636 @@
+<!doctype html>
+<html lang="sl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0b0c0e" />
+  <meta name="description" content="FiberCut — sodobne kovinske ograje, perforirani aluminijasti paneli, drsna vrata in dekorativne stene po meri." />
+  <title>FiberCut — ograje, ki postanejo arhitektura</title>
+    <style>
+:root {
+  --ink: #101114;
+  --paper: #f2efe7;
+  --acid: #c2ff36;
+  --muted: rgba(242, 239, 231, .66);
+  --line: rgba(242, 239, 231, .23);
+  --pad: clamp(24px, 5vw, 76px);
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; background: var(--ink); }
+body {
+  margin: 0;
+  background: var(--ink);
+  color: var(--paper);
+  font-family: Inter, "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-synthesis: none;
+  overflow-x: hidden;
+}
+a { color: inherit; }
+
+#scene, .webgl-fallback {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+}
+#scene { display: block; }
+.webgl-fallback { background: linear-gradient(115deg, #1b1d20, #8c8c86); }
+.fallback-pattern {
+  width: 54vw; height: 100vh; margin-left: auto;
+  background-image: radial-gradient(circle at 50% 50%, transparent 0 9px, #17191c 10px 18px, transparent 19px);
+  background-size: 54px 54px;
+  opacity: .8;
+  transform: skewY(-5deg);
+}
+.noise {
+  position: fixed; inset: -50%; z-index: 2; pointer-events: none; opacity: .055;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.86' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.8'/%3E%3C/svg%3E");
+  animation: grain .22s steps(2) infinite;
+}
+.vignette {
+  position: fixed; inset: 0; z-index: 1; pointer-events: none;
+  background: linear-gradient(90deg, rgba(6,7,8,.76) 0%, rgba(6,7,8,.25) 42%, rgba(6,7,8,.07) 67%, rgba(6,7,8,.42) 100%),
+              linear-gradient(0deg, rgba(7,8,9,.34), transparent 36%, rgba(7,8,9,.18));
+}
+
+.site-header {
+  position: fixed; z-index: 20; top: 0; left: 0; right: 0;
+  height: 92px; padding: 0 var(--pad);
+  display: flex; align-items: center; justify-content: space-between;
+  mix-blend-mode: difference; color: #fff;
+}
+.brand {
+  display: inline-flex; align-items: center; gap: 12px;
+  text-decoration: none; font-size: 14px; letter-spacing: .19em; font-weight: 800;
+}
+.brand-mark { width: 20px; height: 20px; border: 2px solid currentColor; position: relative; display: inline-block; }
+.brand-mark:after { content: ""; position: absolute; right: -5px; bottom: -5px; width: 6px; height: 6px; background: var(--acid); }
+.top-nav { display: flex; align-items: center; gap: clamp(18px, 2.5vw, 42px); font-size: 11px; letter-spacing: .13em; text-transform: uppercase; }
+.top-nav a { text-decoration: none; opacity: .78; transition: opacity .25s ease; }
+.top-nav a:hover { opacity: 1; }
+.top-nav .nav-cta { opacity: 1; padding: 12px 16px; border: 1px solid rgba(255,255,255,.8); }
+
+.chapter-rail {
+  position: fixed; z-index: 16; right: clamp(18px, 2.2vw, 36px); top: 50%; transform: translateY(-50%);
+  display: grid; grid-template-rows: auto 180px auto; justify-items: center; gap: 12px;
+  font: 700 9px/1 monospace; letter-spacing: .12em; color: rgba(255,255,255,.86); mix-blend-mode: difference;
+}
+.rail-line { width: 1px; height: 180px; background: rgba(255,255,255,.27); position: relative; overflow: hidden; }
+.rail-line i { position: absolute; left: 0; top: 0; width: 1px; height: 0%; background: #fff; }
+
+#story { position: relative; z-index: 4; }
+.story-section {
+  min-height: 110vh;
+  padding: 110px var(--pad) 70px;
+  display: flex; align-items: center;
+  position: relative;
+}
+.hero { min-height: 120vh; align-items: center; }
+.copy { width: min(760px, 64vw); position: relative; }
+.copy-left { margin-right: auto; }
+.copy-right { margin-left: auto; text-align: left; width: min(620px, 50vw); }
+.copy.narrow { max-width: 590px; }
+
+.eyebrow {
+  display: flex; gap: 12px; align-items: center;
+  margin: 0 0 26px; font: 700 10px/1.2 monospace; letter-spacing: .16em; color: rgba(255,255,255,.78);
+}
+.eyebrow span { width: 28px; height: 1px; background: var(--acid); display: inline-block; }
+h1, h2 {
+  margin: 0; max-width: 1000px; text-transform: uppercase;
+  font-weight: 720; letter-spacing: -.065em; line-height: .87;
+  text-wrap: balance;
+}
+h1 { font-size: clamp(58px, 8.7vw, 146px); }
+h2 { font-size: clamp(52px, 7.1vw, 110px); }
+h1 em, h2 em { font-family: Georgia, "Times New Roman", serif; font-weight: 400; text-transform: none; letter-spacing: -.055em; }
+.lede, .copy > p:not(.eyebrow), .contact-card > p:not(.eyebrow) {
+  max-width: 610px; margin: 34px 0 0; font-size: clamp(16px, 1.55vw, 22px); line-height: 1.55; color: rgba(255,255,255,.72);
+}
+.lede { max-width: 660px !important; }
+.actions { display: flex; align-items: center; gap: 28px; margin-top: 38px; flex-wrap: wrap; }
+.button {
+  display: inline-flex; justify-content: space-between; align-items: center; gap: 32px;
+  min-width: 218px; padding: 16px 18px; text-decoration: none; text-transform: uppercase;
+  font: 800 10px/1 monospace; letter-spacing: .12em;
+}
+.button-solid { background: var(--paper); color: var(--ink); }
+.button-solid span { font-size: 17px; }
+.button.big { margin-top: 48px; min-width: min(360px, 100%); padding: 20px 22px; }
+.text-link { display: inline-flex; gap: 16px; margin-top: 30px; padding-bottom: 5px; border-bottom: 1px solid rgba(255,255,255,.5); text-decoration: none; font: 700 11px/1.4 monospace; letter-spacing: .08em; text-transform: uppercase; }
+.text-link span { color: var(--acid); }
+.spec-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 34px; }
+.spec-row span { border: 1px solid rgba(255,255,255,.32); padding: 9px 11px; font: 700 9px/1 monospace; letter-spacing: .1em; }
+.micro-note { display: flex; align-items: center; gap: 10px; margin-top: 34px; font: 700 10px/1.3 monospace; letter-spacing: .08em; text-transform: uppercase; opacity: .72; }
+.micro-note i { width: 7px; height: 7px; border-radius: 50%; background: var(--acid); box-shadow: 0 0 0 6px rgba(194,255,54,.1); }
+
+.scroll-cue {
+  position: absolute; left: var(--pad); bottom: 60px; display: flex; align-items: center; gap: 14px;
+  font: 700 9px/1 monospace; letter-spacing: .2em; opacity: .7;
+}
+.scroll-cue i { width: 54px; height: 1px; background: currentColor; overflow: hidden; position: relative; }
+.scroll-cue i:after { content: ""; position: absolute; inset: 0; background: var(--acid); transform: translateX(-100%); animation: scrollLine 1.8s ease-in-out infinite; }
+
+.contact-section { min-height: 108vh; align-items: flex-end; padding-bottom: 32px; flex-wrap: wrap; }
+.contact-card { width: min(1040px, 100%); padding: clamp(30px, 5vw, 72px); background: rgba(10,11,13,.78); border: 1px solid rgba(255,255,255,.13); backdrop-filter: blur(18px); }
+.contact-card h2 { max-width: 900px; }
+.contact-grid { margin-top: 48px; padding-top: 24px; border-top: 1px solid rgba(255,255,255,.18); display: grid; grid-template-columns: 1.3fr 1fr 1fr; gap: 28px; }
+.contact-grid > div { display: grid; align-content: start; gap: 9px; }
+.contact-label { font: 700 9px/1 monospace; letter-spacing: .14em; opacity: .5; }
+.contact-grid a, .contact-grid p { margin: 0; font-size: clamp(15px, 1.5vw, 20px); line-height: 1.45; text-decoration: none; }
+footer { width: 100%; display: flex; justify-content: space-between; gap: 20px; padding-top: 28px; font: 700 8px/1.4 monospace; letter-spacing: .12em; opacity: .5; }
+
+@keyframes grain { 0% { transform: translate(0,0) } 25% { transform: translate(2%, -3%) } 50% { transform: translate(-3%, 2%) } 75% { transform: translate(3%, 4%) } 100% { transform: translate(-2%, -2%) } }
+@keyframes scrollLine { 0% { transform: translateX(-100%); } 50%, 100% { transform: translateX(100%); } }
+
+@media (max-width: 800px) {
+  :root { --pad: 22px; }
+  .site-header { height: 72px; }
+  .top-nav a:not(.nav-cta) { display: none; }
+  .top-nav .nav-cta { padding: 9px 11px; }
+  .chapter-rail { display: none; }
+  .story-section { min-height: 105vh; padding-top: 90px; }
+  .hero { min-height: 115vh; }
+  .copy, .copy-right { width: 100%; margin: 0; }
+  h1 { font-size: clamp(56px, 17vw, 92px); }
+  h2 { font-size: clamp(48px, 15vw, 78px); }
+  .lede, .copy > p:not(.eyebrow) { font-size: 16px; max-width: 88%; }
+  .vignette { background: linear-gradient(0deg, rgba(6,7,8,.75), rgba(6,7,8,.18) 65%, rgba(6,7,8,.24)); }
+  .contact-grid { grid-template-columns: 1fr; }
+  footer { flex-direction: column; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .noise, .scroll-cue i:after { animation: none; }
+}
+
+</style>
+</head>
+<body>
+  <canvas id="scene" aria-hidden="true"></canvas>
+  <div class="noise" aria-hidden="true"></div>
+  <div class="vignette" aria-hidden="true"></div>
+
+  <header class="site-header">
+    <a class="brand" href="#intro" aria-label="FiberCut — na vrh strani">
+      <span class="brand-mark" aria-hidden="true"></span>
+      <span>FIBERCUT</span>
+    </a>
+    <nav class="top-nav" aria-label="Glavna navigacija">
+      <a href="#ograje">Ograje</a>
+      <a href="#vrata">Drsna vrata</a>
+      <a href="#stene">Stene</a>
+      <a class="nav-cta" href="#kontakt">Povpraševanje</a>
+    </nav>
+  </header>
+
+  <aside class="chapter-rail" aria-hidden="true">
+    <span class="rail-number" id="chapterNumber">01</span>
+    <div class="rail-line"><i id="progressBar"></i></div>
+    <span class="rail-total">05</span>
+  </aside>
+
+  <main id="story">
+    <section class="story-section hero" id="intro" data-chapter="01" data-tone="light">
+      <div class="copy copy-left hero-copy">
+        <p class="eyebrow"><span></span> KOVINA / VZOREC / PROSTOR</p>
+        <h1>Ograje, ki<br><em>postanejo</em><br>arhitektura.</h1>
+        <p class="lede">Perforirani aluminijasti paneli, kovinske ograje in drsna vrata po meri. Vaša ideja postane vzorec, ki definira objekt.</p>
+        <div class="actions">
+          <a class="button button-solid" href="#ograje">Raziščite možnosti <span>↘</span></a>
+          <a class="text-link" href="#kontakt">Pošljite svojo idejo <span>→</span></a>
+        </div>
+      </div>
+      <div class="scroll-cue" aria-hidden="true">
+        <span>SCROLL</span><i></i>
+      </div>
+    </section>
+
+    <section class="story-section" id="ograje" data-chapter="02" data-tone="dark">
+      <div class="copy copy-left narrow">
+        <p class="eyebrow"><span></span> 02 — PERFORIRANE OGRAJE</p>
+        <h2>Vaš vzorec.<br>Vaša <em>ograja.</em></h2>
+        <p>Izberite material, barvo in motiv panela. Natančen izrez spremeni kovino v zasebnost, senco in značaj fasade — brez vizualne teže klasične ograje.</p>
+        <div class="spec-row">
+          <span>ALUMINIJ</span><span>PRAŠNO LAKIRANJE</span><span>PO MERI</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="story-section" id="vzorci" data-chapter="03" data-tone="light">
+      <div class="copy copy-right narrow">
+        <p class="eyebrow"><span></span> 03 — VZOREC BREZ OMEJITEV</p>
+        <h2>Od ritma do<br><em>podpisa.</em></h2>
+        <p>Geometrija, organski motiv ali popolnoma unikaten raster. Perforacija uravnava poglede in svetlobo ter omogoča, da se ograja čez dan spreminja skupaj s sencami.</p>
+        <a class="text-link" href="#kontakt">Razvijmo vaš vzorec <span>→</span></a>
+      </div>
+    </section>
+
+    <section class="story-section" id="vrata" data-chapter="04" data-tone="dark">
+      <div class="copy copy-left narrow">
+        <p class="eyebrow"><span></span> 04 — DRSNA VRATA</p>
+        <h2>Velik format.<br><em>Čist premik.</em></h2>
+        <p>Ograja in drsna vrata govorijo isti oblikovni jezik. Enaka barva, enak raster, enoten pogled — od prvega panela do vhoda na dvorišče.</p>
+        <div class="micro-note"><i></i> Vrata se odprejo med pomikom strani</div>
+      </div>
+    </section>
+
+    <section class="story-section" id="stene" data-chapter="05" data-tone="light">
+      <div class="copy copy-right narrow">
+        <p class="eyebrow"><span></span> 05 — DEKORATIVNE STENE</p>
+        <h2>Isti material.<br>Nov <em>prostor.</em></h2>
+        <p>Perforirani kovinski paneli niso samo za mejo parcele. Kot dekorativne predelne stene ustvarjajo zasebnost, filtrirajo svetlobo in povezujejo interier z arhitekturo.</p>
+      </div>
+    </section>
+
+    <section class="story-section contact-section" id="kontakt" data-chapter="05" data-tone="dark">
+      <div class="contact-card">
+        <p class="eyebrow"><span></span> IMATE IDEJO? MI IMAMO REŠITEV.</p>
+        <h2>Narišite jo.<br><em>Mi jo izrežemo.</em></h2>
+        <div class="contact-grid">
+          <div>
+            <span class="contact-label">E-POŠTA</span>
+            <a href="mailto:fibercut.ograje@gmail.com">fibercut.ograje@gmail.com</a>
+          </div>
+          <div>
+            <span class="contact-label">TELEFON</span>
+            <a href="tel:+38651744481">+386 51 744 481</a>
+          </div>
+          <div>
+            <span class="contact-label">LOKACIJA</span>
+            <p>Gabrovka 74<br>1274 Gabrovka</p>
+          </div>
+        </div>
+        <a class="button button-solid big" href="mailto:fibercut.ograje@gmail.com?subject=Povpraševanje%20za%20ograjo">Začnimo projekt <span>↗</span></a>
+      </div>
+      <footer>
+        <span>FIBERCUT / MATIC PODLOGAR S.P.</span>
+        <span>PERFORATED METAL / CUSTOM MADE</span>
+      </footer>
+    </section>
+  </main>
+
+  <div class="webgl-fallback" id="webglFallback" hidden>
+    <div class="fallback-pattern"></div>
+  </div>
+
+  <script>
+    // If the Three.js CDN is unreachable, keep the layout usable with a 2D metal-pattern fallback.
+    window.setTimeout(() => {
+      if (document.documentElement.dataset.webgl !== 'ready') {
+        document.querySelector('#scene').hidden = true;
+        document.querySelector('#webglFallback').hidden = false;
+      }
+    }, 1200);
+  </script>
+  <script type="module">
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.185.1/build/three.module.js';
+
+const canvas = document.querySelector('#scene');
+const fallback = document.querySelector('#webglFallback');
+const progressBar = document.querySelector('#progressBar');
+const chapterNumber = document.querySelector('#chapterNumber');
+const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const isMobile = window.matchMedia('(max-width: 800px)').matches;
+
+let renderer;
+try {
+  renderer = new THREE.WebGLRenderer({ canvas, antialias: !isMobile, alpha: false, powerPreference: 'high-performance' });
+} catch (e) {
+  canvas.hidden = true;
+  fallback.hidden = false;
+  throw e;
+}
+
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, isMobile ? 1.4 : 1.8));
+renderer.setSize(window.innerWidth, window.innerHeight, false);
+renderer.shadowMap.enabled = !isMobile;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+document.documentElement.dataset.webgl = 'ready';
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.05;
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0xc9c7bf);
+scene.fog = new THREE.FogExp2(0xb8b8b2, 0.022);
+
+const camera = new THREE.PerspectiveCamera(isMobile ? 64 : 55, window.innerWidth / window.innerHeight, 0.1, 260);
+camera.position.set(-0.2, 1.75, 8);
+
+// --- Lighting ---------------------------------------------------------------
+const hemi = new THREE.HemisphereLight(0xece9df, 0x33363a, 2.3);
+scene.add(hemi);
+const sun = new THREE.DirectionalLight(0xfff2d4, 4.2);
+sun.position.set(-9, 14, 8);
+sun.castShadow = !isMobile;
+sun.shadow.mapSize.set(2048, 2048);
+sun.shadow.camera.left = -18;
+sun.shadow.camera.right = 18;
+sun.shadow.camera.top = 14;
+sun.shadow.camera.bottom = -8;
+scene.add(sun);
+const rim = new THREE.DirectionalLight(0xcfe4ff, 1.4);
+rim.position.set(8, 5, -25);
+scene.add(rim);
+
+// --- Materials --------------------------------------------------------------
+const MAT = {
+  anthracite: new THREE.MeshStandardMaterial({ color: 0x17191c, metalness: .82, roughness: .27 }),
+  graphite: new THREE.MeshStandardMaterial({ color: 0x292c2f, metalness: .76, roughness: .3 }),
+  aluminium: new THREE.MeshStandardMaterial({ color: 0xc6c7c3, metalness: .9, roughness: .25 }),
+  warmMetal: new THREE.MeshStandardMaterial({ color: 0x8a8174, metalness: .88, roughness: .26 }),
+  concrete: new THREE.MeshStandardMaterial({ color: 0xb6b3aa, roughness: .93, metalness: 0 }),
+  darkConcrete: new THREE.MeshStandardMaterial({ color: 0x545457, roughness: .9, metalness: 0 }),
+  glass: new THREE.MeshPhysicalMaterial({ color: 0xa7bdc0, roughness: .12, metalness: 0, transparent: true, opacity: .5, transmission: .25 }),
+  green: new THREE.MeshStandardMaterial({ color: 0x3a4437, roughness: 1 }),
+};
+
+function mesh(geo, mat, cast = true, receive = true) {
+  const m = new THREE.Mesh(geo, mat);
+  m.castShadow = cast && !isMobile;
+  m.receiveShadow = receive && !isMobile;
+  return m;
+}
+
+// --- Ground and architectural background -----------------------------------
+const ground = mesh(new THREE.PlaneGeometry(34, 190), new THREE.MeshStandardMaterial({ color: 0x9b9a94, roughness: .94 }));
+ground.rotation.x = -Math.PI / 2;
+ground.position.set(0, 0, -78);
+scene.add(ground);
+
+const road = mesh(new THREE.PlaneGeometry(5.8, 190), new THREE.MeshStandardMaterial({ color: 0x737578, roughness: .98 }));
+road.rotation.x = -Math.PI / 2;
+road.position.set(-.1, .008, -78);
+scene.add(road);
+
+const curb = mesh(new THREE.BoxGeometry(.35, .18, 190), MAT.concrete);
+curb.position.set(3.25, .09, -78);
+scene.add(curb);
+
+// Minimal houses behind the fence for scale and architectural atmosphere.
+for (let i = 0; i < 7; i++) {
+  const z = -12 - i * 23;
+  const house = new THREE.Group();
+  const body = mesh(new THREE.BoxGeometry(8 + (i % 2) * 2, 3 + (i % 3) * .45, 10),
+                    i % 2 ? MAT.concrete : new THREE.MeshStandardMaterial({ color: 0xd1cec5, roughness: .92 }));
+  body.position.set(7.9, 1.5, z - 3);
+  house.add(body);
+  const windowMat = MAT.glass.clone();
+  const win = mesh(new THREE.PlaneGeometry(3.8, 1.3), windowMat, false, false);
+  win.rotation.y = -Math.PI / 2;
+  win.position.set(3.88, 1.8, z - 1.6);
+  house.add(win);
+  scene.add(house);
+}
+
+// Sparse landscaping.
+const treeGeo = new THREE.IcosahedronGeometry(1, 1);
+for (let i = 0; i < 17; i++) {
+  const z = -8 - i * 8.4;
+  const r = .65 + (i % 4) * .12;
+  const crown = mesh(treeGeo, MAT.green, false, true);
+  crown.scale.set(r * .8, r * 1.25, r * .8);
+  crown.position.set(6.7 + (i % 3) * 1.2, 1.35 + r * .4, z);
+  crown.rotation.set(i * .4, i * .8, 0);
+  scene.add(crown);
+}
+
+// --- Fence helpers ----------------------------------------------------------
+const fenceRoot = new THREE.Group();
+scene.add(fenceRoot);
+
+function addPost(z, x = 3.72, h = 2.25, mat = MAT.anthracite, width = .16) {
+  const p = mesh(new THREE.BoxGeometry(width, h, width), mat);
+  p.position.set(x, h / 2 + .12, z);
+  fenceRoot.add(p);
+  return p;
+}
+
+function makeAlphaPattern(type = 'geo', size = 512) {
+  const c = document.createElement('canvas');
+  c.width = c.height = size;
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(0, 0, size, size);
+  ctx.fillStyle = '#000';
+
+  if (type === 'dots') {
+    const step = 52;
+    for (let y = 24; y < size; y += step) for (let x = 24; x < size; x += step) {
+      const offset = ((y / step) % 2) * step / 2;
+      ctx.beginPath(); ctx.arc((x + offset) % size, y, 9 + 4 * Math.sin(y * .04), 0, Math.PI * 2); ctx.fill();
+    }
+  } else if (type === 'geo') {
+    const s = 58;
+    for (let y = -s; y < size + s; y += s) for (let x = -s; x < size + s; x += s) {
+      ctx.save(); ctx.translate(x + ((y / s) % 2) * 29, y); ctx.rotate(Math.PI / 4);
+      ctx.fillRect(-16, -5, 32, 10); ctx.restore();
+      ctx.save(); ctx.translate(x + 29, y + 29); ctx.rotate(-Math.PI / 4);
+      ctx.fillRect(-16, -5, 32, 10); ctx.restore();
+    }
+  } else if (type === 'leaf') {
+    const s = 76;
+    for (let y = -20; y < size + 30; y += s) for (let x = -20; x < size + 30; x += s) {
+      const flip = ((x + y) / s) % 2 ? 1 : -1;
+      ctx.save(); ctx.translate(x + 22, y + 18); ctx.rotate(flip * .65);
+      ctx.beginPath(); ctx.ellipse(0, 0, 24, 6, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+      ctx.save(); ctx.translate(x + 52, y + 54); ctx.rotate(-flip * .65);
+      ctx.beginPath(); ctx.ellipse(0, 0, 19, 5, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+    }
+  } else if (type === 'slots') {
+    for (let y = 26; y < size; y += 45) {
+      const inset = 12 + ((y / 45) % 4) * 20;
+      ctx.roundRect(inset, y, size - inset * 2, 12, 6); ctx.fill();
+    }
+  } else if (type === 'waves') {
+    for (let y = 20; y < size; y += 42) for (let x = 16; x < size; x += 46) {
+      const rr = 6 + 5 * (Math.sin(x * .037 + y * .025) + 1);
+      ctx.beginPath(); ctx.arc(x, y + Math.sin(x * .04) * 10, rr, 0, Math.PI * 2); ctx.fill();
+    }
+  }
+
+  const tex = new THREE.CanvasTexture(c);
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
+}
+
+function perforatedMaterial(color, pattern, repeatX = 1.4, repeatY = 1) {
+  const alpha = makeAlphaPattern(pattern);
+  alpha.repeat.set(repeatX, repeatY);
+  const m = new THREE.MeshStandardMaterial({
+    color,
+    metalness: .9,
+    roughness: .25,
+    alphaMap: alpha,
+    transparent: true,
+    alphaTest: .48,
+    side: THREE.DoubleSide,
+  });
+  return m;
+}
+
+function addPerforatedRun({ z, count = 4, panelLength = 3.3, gap = .14, height = 2.08, material, postMaterial = MAT.anthracite }) {
+  let cursor = z;
+  for (let i = 0; i < count; i++) {
+    const center = cursor - panelLength / 2;
+    const panel = mesh(new THREE.PlaneGeometry(panelLength, height), material);
+    panel.rotation.y = Math.PI / 2;
+    panel.position.set(3.72, 1.22, center);
+    fenceRoot.add(panel);
+    // subtle back layer gives cut-outs depth against light
+    const frameTop = mesh(new THREE.BoxGeometry(.055, .06, panelLength), postMaterial);
+    frameTop.position.set(3.70, 2.26, center); fenceRoot.add(frameTop);
+    const frameBottom = frameTop.clone(); frameBottom.position.y = .18; fenceRoot.add(frameBottom);
+    addPost(cursor + .02, 3.72, 2.25, postMaterial);
+    cursor -= panelLength + gap;
+  }
+  addPost(cursor + gap, 3.72, 2.25, postMaterial);
+  return cursor;
+}
+
+function addSlatRun(z, count = 4, panelLength = 3.1, gap = .14) {
+  let cursor = z;
+  for (let p = 0; p < count; p++) {
+    const center = cursor - panelLength / 2;
+    for (let i = 0; i < 10; i++) {
+      const slat = mesh(new THREE.BoxGeometry(.06, .105, panelLength), MAT.anthracite);
+      slat.position.set(3.72, .39 + i * .19, center);
+      fenceRoot.add(slat);
+    }
+    addPost(cursor, 3.72, 2.25, MAT.graphite);
+    cursor -= panelLength + gap;
+  }
+  addPost(cursor + gap, 3.72, 2.25, MAT.graphite);
+  return cursor;
+}
+
+// Chapter 1: slim horizontal metal rhythm.
+addSlatRun(-3.5, 5, 3.2, .12);
+
+// Chapter 2: natural aluminium geometric perforation.
+const geoMat = perforatedMaterial(0xbfc1bd, 'geo', 1.5, 1);
+addPerforatedRun({ z: -21.5, count: 5, panelLength: 3.25, material: geoMat, postMaterial: MAT.graphite });
+
+// Chapter 3: warm organic custom-cut pattern.
+const leafMat = perforatedMaterial(0x7c756b, 'leaf', 1.7, 1.15);
+addPerforatedRun({ z: -40.5, count: 5, panelLength: 3.3, material: leafMat, postMaterial: MAT.warmMetal });
+
+// Transition: denser perforation.
+const dotsMat = perforatedMaterial(0x25282b, 'waves', 1.55, 1.1);
+addPerforatedRun({ z: -59.5, count: 3, panelLength: 3.45, material: dotsMat, postMaterial: MAT.anthracite });
+
+// Chapter 4: oversized sliding gate. The gate moves as the visitor reaches it.
+const gateRoot = new THREE.Group();
+gateRoot.position.set(0, 0, -70.6);
+fenceRoot.add(gateRoot);
+const gateMat = perforatedMaterial(0x17191c, 'slots', 2.15, 1.15);
+const gatePanel = mesh(new THREE.PlaneGeometry(7.4, 2.18), gateMat);
+gatePanel.rotation.y = Math.PI / 2;
+gatePanel.position.set(3.72, 1.27, -3.7);
+gateRoot.add(gatePanel);
+const gateTop = mesh(new THREE.BoxGeometry(.075, .07, 7.4), MAT.anthracite);
+gateTop.position.set(3.69, 2.37, -3.7); gateRoot.add(gateTop);
+const gateBottom = gateTop.clone(); gateBottom.position.y = .16; gateRoot.add(gateBottom);
+addPost(-70.55, 3.72, 2.38, MAT.anthracite, .22);
+addPost(-78.2, 3.72, 2.38, MAT.anthracite, .22);
+
+// Fence section that receives the open gate.
+const receiverMat = perforatedMaterial(0x232528, 'slots', 1.6, 1.1);
+addPerforatedRun({ z: -78.5, count: 4, panelLength: 3.1, material: receiverMat, postMaterial: MAT.anthracite });
+
+// Chapter 5: decorative divider language with more openness.
+const dividerMat = perforatedMaterial(0x1b1d20, 'leaf', 1.45, 1.05);
+addPerforatedRun({ z: -94, count: 7, panelLength: 3.0, height: 2.25, material: dividerMat, postMaterial: MAT.graphite });
+
+// Final monumental wall / logo plane.
+const endWall = mesh(new THREE.BoxGeometry(.32, 3.4, 14), MAT.darkConcrete);
+endWall.position.set(4.8, 1.7, -121.5);
+scene.add(endWall);
+
+// A few acid marker lights as a brand motif.
+for (const z of [-20.8, -58.8, -93.5, -118]) {
+  const glow = new THREE.PointLight(0xc2ff36, 2.5, 4.5, 2);
+  glow.position.set(3.2, .24, z);
+  scene.add(glow);
+  const marker = mesh(new THREE.BoxGeometry(.08, .08, .08), new THREE.MeshBasicMaterial({ color: 0xc2ff36 }), false, false);
+  marker.position.copy(glow.position); scene.add(marker);
+}
+
+// --- Scroll / camera --------------------------------------------------------
+let targetProgress = 0;
+let smoothProgress = 0;
+let pointerX = 0, pointerY = 0;
+const travel = 121;
+
+function getProgress() {
+  const max = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+  return THREE.MathUtils.clamp(window.scrollY / max, 0, 1);
+}
+
+function updateChapter(p) {
+  const chapter = p < .18 ? '01' : p < .38 ? '02' : p < .58 ? '03' : p < .78 ? '04' : '05';
+  chapterNumber.textContent = chapter;
+  progressBar.style.height = `${Math.round(p * 100)}%`;
+}
+
+window.addEventListener('scroll', () => {
+  targetProgress = getProgress();
+  updateChapter(targetProgress);
+}, { passive: true });
+
+window.addEventListener('pointermove', (e) => {
+  pointerX = (e.clientX / window.innerWidth - .5) * 2;
+  pointerY = (e.clientY / window.innerHeight - .5) * 2;
+}, { passive: true });
+
+function animateGate(p) {
+  // Gate starts opening at chapter four, rests open, then eases slightly back.
+  const open = THREE.MathUtils.smoothstep(p, .52, .67);
+  const settle = 1 - .18 * THREE.MathUtils.smoothstep(p, .81, .94);
+  gatePanel.position.z = -3.7 - open * 5.65 * settle;
+  gateTop.position.z = gatePanel.position.z;
+  gateBottom.position.z = gatePanel.position.z;
+}
+
+function updateCamera(p, t) {
+  const z = 7 - p * travel;
+  const sideDrift = Math.sin(p * Math.PI * 4.5) * .18;
+  const px = reduceMotion ? 0 : pointerX * .08;
+  const py = reduceMotion ? 0 : pointerY * .035;
+  camera.position.set(-.32 + sideDrift + px, 1.68 + Math.sin(p * Math.PI * 5) * .035 - py, z);
+
+  // Look forward, always biased toward the fence. This creates the "walking along it" feeling.
+  const lookX = isMobile ? 2.55 : 2.9;
+  camera.lookAt(lookX + px * 1.2, 1.28 - py, z - (isMobile ? 8.5 : 10.5));
+  camera.rotation.z += Math.sin(t * .00018) * .0015;
+}
+
+function render(t = 0) {
+  targetProgress = getProgress();
+  smoothProgress += (targetProgress - smoothProgress) * (reduceMotion ? 1 : .075);
+  updateCamera(smoothProgress, t);
+  animateGate(smoothProgress);
+  renderer.render(scene, camera);
+  requestAnimationFrame(render);
+}
+
+function resize() {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.fov = window.innerWidth <= 800 ? 64 : 55;
+  camera.updateProjectionMatrix();
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, window.innerWidth <= 800 ? 1.35 : 1.8));
+  renderer.setSize(window.innerWidth, window.innerHeight, false);
+}
+window.addEventListener('resize', resize, { passive: true });
+
+updateChapter(getProgress());
+requestAnimationFrame(render);
+
+</script>
+</body>
+</html>
