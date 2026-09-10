@@ -20,7 +20,7 @@
 html { scroll-behavior: smooth; background: var(--ink); }
 body {
   margin: 0;
-  background: var(--ink);
+  background: #b8b8b2;
   color: var(--paper);
   font-family: Inter, "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-synthesis: none;
@@ -28,15 +28,15 @@ body {
 }
 a { color: inherit; }
 
-#scene, .webgl-fallback {
+#sceneVideo, .video-fallback {
   position: fixed;
   inset: 0;
   width: 100%;
   height: 100%;
   z-index: 0;
 }
-#scene { display: block; }
-.webgl-fallback { background: linear-gradient(115deg, #1b1d20, #8c8c86); }
+#sceneVideo { display: block; object-fit: cover; object-position: center center; background: #b9b8b2; transform: translateZ(0); backface-visibility: hidden; }
+.video-fallback { background: linear-gradient(115deg, #1b1d20, #8c8c86); }
 .fallback-pattern {
   width: 54vw; height: 100vh; margin-left: auto;
   background-image: radial-gradient(circle at 50% 50%, transparent 0 9px, #17191c 10px 18px, transparent 19px);
@@ -133,8 +133,9 @@ h1 em, h2 em { font-family: Georgia, "Times New Roman", serif; font-weight: 400;
 .scroll-cue i { width: 54px; height: 1px; background: currentColor; overflow: hidden; position: relative; }
 .scroll-cue i:after { content: ""; position: absolute; inset: 0; background: var(--acid); transform: translateX(-100%); animation: scrollLine 1.8s ease-in-out infinite; }
 
-.contact-section { min-height: 108vh; align-items: flex-end; padding-bottom: 32px; flex-wrap: wrap; }
-.contact-card { width: min(1040px, 100%); padding: clamp(30px, 5vw, 72px); background: rgba(10,11,13,.78); border: 1px solid rgba(255,255,255,.13); backdrop-filter: blur(18px); }
+.contact-section { min-height: 118vh; align-items: flex-end; padding: 18vh var(--pad) 32px; flex-wrap: wrap; }
+.reveal-section { min-height: 154vh; }
+.contact-card { width: min(1040px, 100%); padding: clamp(30px, 5vw, 72px); background: rgba(10,11,13,.42); border: 1px solid rgba(255,255,255,.10); backdrop-filter: blur(10px); }
 .contact-card h2 { max-width: 900px; }
 .contact-grid { margin-top: 48px; padding-top: 24px; border-top: 1px solid rgba(255,255,255,.18); display: grid; grid-template-columns: 1.3fr 1fr 1fr; gap: 28px; }
 .contact-grid > div { display: grid; align-content: start; gap: 9px; }
@@ -153,6 +154,9 @@ footer { width: 100%; display: flex; justify-content: space-between; gap: 20px; 
   .chapter-rail { display: none; }
   .story-section { min-height: 105vh; padding-top: 90px; }
   .hero { min-height: 115vh; }
+  .reveal-section { min-height: 170vh; }
+  .contact-section { min-height: 128vh; padding-top: 24vh; }
+  .contact-card { background: rgba(10,11,13,.34); backdrop-filter: blur(8px); }
   .copy, .copy-right { width: 100%; margin: 0; }
   h1 { font-size: clamp(56px, 17vw, 92px); }
   h2 { font-size: clamp(48px, 15vw, 78px); }
@@ -167,10 +171,36 @@ footer { width: 100%; display: flex; justify-content: space-between; gap: 20px; 
   .noise, .scroll-cue i:after { animation: none; }
 }
 
+/* Short video preloader: prevents scrolling while shaders/textures are warmed up. */
+body.is-loading { overflow: hidden; }
+.scene-preloader {
+  position: fixed; inset: 0; z-index: 1000;
+  background: #0b0c0e; color: #f2efe7;
+  display: flex; align-items: flex-end;
+  padding: max(28px, env(safe-area-inset-bottom)) var(--pad) max(34px, env(safe-area-inset-bottom));
+  transition: opacity .38s ease, visibility .38s ease;
+}
+.scene-preloader.is-ready { opacity: 0; visibility: hidden; pointer-events: none; }
+.scene-preloader-inner { width: min(420px, 100%); }
+.scene-preloader-label {
+  display: flex; justify-content: space-between; gap: 20px;
+  font: 700 9px/1.2 monospace; letter-spacing: .16em; text-transform: uppercase;
+  opacity: .78; margin-bottom: 12px;
+}
+.scene-preloader-line { height: 1px; width: 100%; background: rgba(255,255,255,.22); overflow: hidden; }
+.scene-preloader-line i { display: block; width: 45%; height: 100%; background: var(--acid); animation: preloadSweep .9s ease-in-out infinite; }
+@keyframes preloadSweep { 0% { transform: translateX(-110%); } 100% { transform: translateX(245%); } }
+
 </style>
 </head>
-<body>
-  <canvas id="scene" aria-hidden="true"></canvas>
+<body class="is-loading">
+  <div class="scene-preloader" id="scenePreloader" aria-hidden="true">
+    <div class="scene-preloader-inner">
+      <div class="scene-preloader-label"><span>FIBERCUT / FILM</span><span>PRIPRAVA ARHITEKTURNE SCENE</span></div>
+      <div class="scene-preloader-line"><i></i></div>
+    </div>
+  </div>
+  <video id="sceneVideo" aria-hidden="true" muted playsinline preload="auto"></video>
   <div class="noise" aria-hidden="true"></div>
   <div class="vignette" aria-hidden="true"></div>
 
@@ -190,7 +220,7 @@ footer { width: 100%; display: flex; justify-content: space-between; gap: 20px; 
   <aside class="chapter-rail" aria-hidden="true">
     <span class="rail-number" id="chapterNumber">01</span>
     <div class="rail-line"><i id="progressBar"></i></div>
-    <span class="rail-total">06</span>
+    <span class="rail-total">05</span>
   </aside>
 
   <main id="story">
@@ -215,7 +245,7 @@ footer { width: 100%; display: flex; justify-content: space-between; gap: 20px; 
         <h2>Vaš vzorec.<br>Vaša <em>ograja.</em></h2>
         <p>Izberite material, barvo in motiv panela. Natančen izrez spremeni kovino v zasebnost, senco in značaj fasade — brez vizualne teže klasične ograje.</p>
         <div class="spec-row">
-          <span>ALUMINIJ</span><span>PRAŠNO LAKIRANJE</span><span>PO MERI</span>
+          <span>ANTRACIT</span><span>MAT ČRNA</span><span>TOPLI BRON</span>
         </div>
       </div>
     </section>
@@ -238,24 +268,15 @@ footer { width: 100%; display: flex; justify-content: space-between; gap: 20px; 
       </div>
     </section>
 
-    <section class="story-section" id="carport" data-chapter="05" data-tone="dark">
+    <section class="story-section reveal-section" id="stene" data-chapter="05" data-tone="light">
       <div class="copy copy-right narrow">
-        <p class="eyebrow"><span></span> 05 — ZA OGRAJO</p>
-        <h2>Meja izgine.<br><em>Prostor se odpre.</em></h2>
-        <p>Ko se drsna vrata odprejo, se pogled nadaljuje v arhitekturo objekta. Ograja ne stoji sama zase — njen material, raster in proporci povežejo dovoz, nadstrešek in bivalni del v celoto.</p>
-        <div class="micro-note"><i></i> Kamera prečka odprta vrata in obkroži nadstrešek</div>
+        <p class="eyebrow"><span></span> 05 — KOVINA KOT ARHITEKTURA</p>
+        <h2>Skozi vrata.<br>V <em>celoto.</em></h2>
+        <p>Za vhodom se pogled odpre na carport s strešno teraso in perforirane jeklene stopnice. Isti jezik kovine se nadaljuje od ograje do detajlov objekta.</p>
       </div>
     </section>
 
-    <section class="story-section" id="stene" data-chapter="06" data-tone="light">
-      <div class="copy copy-left narrow">
-        <p class="eyebrow"><span></span> 06 — DETAIL, KI POVEŽE HIŠO</p>
-        <h2>Od ograje do<br><em>terase.</em></h2>
-        <p>Perforirani elementi se lahko nadaljujejo ob objektu kot senčila ali dekorativne predelne stene. Pot se zaključi pri stopnicah na strešno teraso — tam, kjer kovinski detajl postane del vsakodnevnega prostora.</p>
-      </div>
-    </section>
-
-    <section class="story-section contact-section" id="kontakt" data-chapter="06" data-tone="dark">
+    <section class="story-section contact-section" id="kontakt" data-chapter="05" data-tone="dark">
       <div class="contact-card">
         <p class="eyebrow"><span></span> IMATE IDEJO? MI IMAMO REŠITEV.</p>
         <h2>Narišite jo.<br><em>Mi jo izrežemo.</em></h2>
@@ -282,483 +303,116 @@ footer { width: 100%; display: flex; justify-content: space-between; gap: 20px; 
     </section>
   </main>
 
-  <div class="webgl-fallback" id="webglFallback" hidden>
-    <div class="fallback-pattern"></div>
-  </div>
-
+  <div class="video-fallback" id="videoFallback" hidden><div class="fallback-pattern"></div></div>
   <script>
-    // If the Three.js CDN is unreachable, keep the layout usable with a 2D metal-pattern fallback.
-    window.setTimeout(() => {
-      if (document.documentElement.dataset.webgl !== 'ready') {
-        document.querySelector('#scene').hidden = true;
-        document.querySelector('#webglFallback').hidden = false;
+  (() => {
+    const video = document.querySelector('#sceneVideo');
+    const loader = document.querySelector('#scenePreloader');
+    const fallback = document.querySelector('#videoFallback');
+    const progressBar = document.querySelector('#progressBar');
+    const chapterNumber = document.querySelector('#chapterNumber');
+    const portrait = window.matchMedia('(max-width: 800px) and (orientation: portrait)').matches;
+    const source = portrait ? 'fibercut-scroll-portrait.mp4' : 'fibercut-scroll-landscape.mp4';
+    let duration = 17;
+    let targetTime = 0;
+    let ready = false;
+    let lastSeekAt = 0;
+
+    video.src = source;
+    video.muted = true;
+    video.playsInline = true;
+    video.preload = 'auto';
+    video.load();
+
+    function progress() {
+      const max = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+      return Math.max(0, Math.min(1, window.scrollY / max));
+    }
+
+    function updateUI(p) {
+      const chapter = p < .18 ? '01' : p < .38 ? '02' : p < .58 ? '03' : p < .78 ? '04' : '05';
+      if (chapterNumber) chapterNumber.textContent = chapter;
+      if (progressBar) progressBar.style.height = `${Math.round(p * 100)}%`;
+    }
+
+    function mapProgressToVideo(p) {
+      // Slightly slower opening, then more time for the gate/carport reveal.
+      if (p < .58) return duration * (p / .58) * .52;
+      const q = (p - .58) / .42;
+      return duration * (.52 + q * .48);
+    }
+
+    function onScroll() {
+      const p = progress();
+      targetTime = mapProgressToVideo(p);
+      updateUI(p);
+    }
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+
+    function seekLoop(now) {
+      if (ready && video.readyState >= 2) {
+        const delta = targetTime - video.currentTime;
+        if (!video.seeking && Math.abs(delta) > 0.025 && now - lastSeekAt > 28) {
+          // Large jumps catch up quickly; normal scrolling remains cinematic.
+          const step = Math.abs(delta) > 1.2 ? delta * .72 : delta * .42;
+          video.currentTime = Math.max(0, Math.min(duration - .03, video.currentTime + step));
+          lastSeekAt = now;
+        }
       }
-    }, 1200);
+      requestAnimationFrame(seekLoop);
+    }
+
+    const minimumLoader = new Promise(resolve => setTimeout(resolve, 2000));
+    const mediaReady = new Promise(resolve => {
+      let resolved = false;
+      const done = () => { if (!resolved) { resolved = true; resolve(); } };
+      video.addEventListener('loadedmetadata', () => {
+        if (Number.isFinite(video.duration) && video.duration > 1) duration = video.duration;
+      }, { once: true });
+      video.addEventListener('canplay', done, { once: true });
+      video.addEventListener('loadeddata', done, { once: true });
+      setTimeout(done, 6000);
+    });
+
+    async function boot() {
+      try {
+        await mediaReady;
+        // Prime Android/iOS decoder while the loader still covers the scene.
+        try {
+          await video.play();
+          await new Promise(resolve => setTimeout(resolve, 220));
+          video.pause();
+          video.currentTime = 0.01;
+        } catch (_) {
+          video.pause();
+        }
+        await minimumLoader;
+        targetTime = mapProgressToVideo(progress());
+        ready = true;
+        document.body.classList.remove('is-loading');
+        if (loader) {
+          loader.classList.add('is-ready');
+          setTimeout(() => loader.remove(), 450);
+        }
+        requestAnimationFrame(seekLoop);
+      } catch (_) {
+        video.hidden = true;
+        if (fallback) fallback.hidden = false;
+        document.body.classList.remove('is-loading');
+        if (loader) loader.classList.add('is-ready');
+      }
+    }
+
+    video.addEventListener('error', () => {
+      video.hidden = true;
+      if (fallback) fallback.hidden = false;
+      document.body.classList.remove('is-loading');
+      if (loader) loader.classList.add('is-ready');
+    }, { once: true });
+
+    boot();
+  })();
   </script>
-  <script type="module">
-import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.185.1/build/three.module.js';
-
-const canvas = document.querySelector('#scene');
-const fallback = document.querySelector('#webglFallback');
-const progressBar = document.querySelector('#progressBar');
-const chapterNumber = document.querySelector('#chapterNumber');
-const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-const isMobile = window.matchMedia('(max-width: 800px)').matches;
-
-let renderer;
-try {
-  renderer = new THREE.WebGLRenderer({ canvas, antialias: !isMobile, alpha: false, powerPreference: 'high-performance' });
-} catch (e) {
-  canvas.hidden = true;
-  fallback.hidden = false;
-  throw e;
-}
-
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, isMobile ? 1.4 : 1.8));
-renderer.setSize(window.innerWidth, window.innerHeight, false);
-renderer.shadowMap.enabled = !isMobile;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-document.documentElement.dataset.webgl = 'ready';
-renderer.outputColorSpace = THREE.SRGBColorSpace;
-renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.05;
-
-const scene = new THREE.Scene();
-scene.background = new THREE.Color(0xc9c7bf);
-scene.fog = new THREE.FogExp2(0xb8b8b2, 0.022);
-
-const camera = new THREE.PerspectiveCamera(isMobile ? 64 : 55, window.innerWidth / window.innerHeight, 0.1, 260);
-camera.position.set(-0.2, 1.75, 8);
-
-// --- Lighting ---------------------------------------------------------------
-const hemi = new THREE.HemisphereLight(0xece9df, 0x33363a, 2.3);
-scene.add(hemi);
-const sun = new THREE.DirectionalLight(0xfff2d4, 4.2);
-sun.position.set(-9, 14, 8);
-sun.castShadow = !isMobile;
-sun.shadow.mapSize.set(2048, 2048);
-sun.shadow.camera.left = -18;
-sun.shadow.camera.right = 18;
-sun.shadow.camera.top = 14;
-sun.shadow.camera.bottom = -8;
-scene.add(sun);
-const rim = new THREE.DirectionalLight(0xcfe4ff, 1.4);
-rim.position.set(8, 5, -25);
-scene.add(rim);
-
-// --- Materials --------------------------------------------------------------
-const MAT = {
-  anthracite: new THREE.MeshStandardMaterial({ color: 0x17191c, metalness: .82, roughness: .27 }),
-  graphite: new THREE.MeshStandardMaterial({ color: 0x292c2f, metalness: .76, roughness: .3 }),
-  aluminium: new THREE.MeshStandardMaterial({ color: 0xc6c7c3, metalness: .9, roughness: .25 }),
-  warmMetal: new THREE.MeshStandardMaterial({ color: 0x8a8174, metalness: .88, roughness: .26 }),
-  concrete: new THREE.MeshStandardMaterial({ color: 0xb6b3aa, roughness: .93, metalness: 0 }),
-  darkConcrete: new THREE.MeshStandardMaterial({ color: 0x545457, roughness: .9, metalness: 0 }),
-  glass: new THREE.MeshPhysicalMaterial({ color: 0xa7bdc0, roughness: .12, metalness: 0, transparent: true, opacity: .5, transmission: .25 }),
-  green: new THREE.MeshStandardMaterial({ color: 0x3a4437, roughness: 1 }),
-};
-
-function mesh(geo, mat, cast = true, receive = true) {
-  const m = new THREE.Mesh(geo, mat);
-  m.castShadow = cast && !isMobile;
-  m.receiveShadow = receive && !isMobile;
-  return m;
-}
-
-// --- Ground and architectural background -----------------------------------
-const ground = mesh(new THREE.PlaneGeometry(42, 230), new THREE.MeshStandardMaterial({ color: 0x9b9a94, roughness: .94 }));
-ground.rotation.x = -Math.PI / 2;
-ground.position.set(4, 0, -90);
-scene.add(ground);
-
-const road = mesh(new THREE.PlaneGeometry(5.8, 205), new THREE.MeshStandardMaterial({ color: 0x737578, roughness: .98 }));
-road.rotation.x = -Math.PI / 2;
-road.position.set(-.1, .008, -82);
-scene.add(road);
-
-const curb = mesh(new THREE.BoxGeometry(.35, .18, 205), MAT.concrete);
-curb.position.set(3.25, .09, -82);
-scene.add(curb);
-
-// Minimal houses behind the fence for scale and architectural atmosphere.
-for (let i = 0; i < 7; i++) {
-  const z = -12 - i * 23;
-  const house = new THREE.Group();
-  const body = mesh(new THREE.BoxGeometry(8 + (i % 2) * 2, 3 + (i % 3) * .45, 10),
-                    i % 2 ? MAT.concrete : new THREE.MeshStandardMaterial({ color: 0xd1cec5, roughness: .92 }));
-  body.position.set(7.9, 1.5, z - 3);
-  house.add(body);
-  const windowMat = MAT.glass.clone();
-  const win = mesh(new THREE.PlaneGeometry(3.8, 1.3), windowMat, false, false);
-  win.rotation.y = -Math.PI / 2;
-  win.position.set(3.88, 1.8, z - 1.6);
-  house.add(win);
-  scene.add(house);
-}
-
-// Sparse landscaping.
-const treeGeo = new THREE.IcosahedronGeometry(1, 1);
-for (let i = 0; i < 17; i++) {
-  const z = -8 - i * 8.4;
-  const r = .65 + (i % 4) * .12;
-  const crown = mesh(treeGeo, MAT.green, false, true);
-  crown.scale.set(r * .8, r * 1.25, r * .8);
-  crown.position.set(6.7 + (i % 3) * 1.2, 1.35 + r * .4, z);
-  crown.rotation.set(i * .4, i * .8, 0);
-  scene.add(crown);
-}
-
-// --- Fence helpers ----------------------------------------------------------
-const fenceRoot = new THREE.Group();
-scene.add(fenceRoot);
-
-function addPost(z, x = 3.72, h = 2.25, mat = MAT.anthracite, width = .16) {
-  const p = mesh(new THREE.BoxGeometry(width, h, width), mat);
-  p.position.set(x, h / 2 + .12, z);
-  fenceRoot.add(p);
-  return p;
-}
-
-function makeAlphaPattern(type = 'geo', size = 512) {
-  const c = document.createElement('canvas');
-  c.width = c.height = size;
-  const ctx = c.getContext('2d');
-  ctx.fillStyle = '#fff';
-  ctx.fillRect(0, 0, size, size);
-  ctx.fillStyle = '#000';
-
-  if (type === 'dots') {
-    const step = 52;
-    for (let y = 24; y < size; y += step) for (let x = 24; x < size; x += step) {
-      const offset = ((y / step) % 2) * step / 2;
-      ctx.beginPath(); ctx.arc((x + offset) % size, y, 9 + 4 * Math.sin(y * .04), 0, Math.PI * 2); ctx.fill();
-    }
-  } else if (type === 'geo') {
-    const s = 58;
-    for (let y = -s; y < size + s; y += s) for (let x = -s; x < size + s; x += s) {
-      ctx.save(); ctx.translate(x + ((y / s) % 2) * 29, y); ctx.rotate(Math.PI / 4);
-      ctx.fillRect(-16, -5, 32, 10); ctx.restore();
-      ctx.save(); ctx.translate(x + 29, y + 29); ctx.rotate(-Math.PI / 4);
-      ctx.fillRect(-16, -5, 32, 10); ctx.restore();
-    }
-  } else if (type === 'leaf') {
-    const s = 76;
-    for (let y = -20; y < size + 30; y += s) for (let x = -20; x < size + 30; x += s) {
-      const flip = ((x + y) / s) % 2 ? 1 : -1;
-      ctx.save(); ctx.translate(x + 22, y + 18); ctx.rotate(flip * .65);
-      ctx.beginPath(); ctx.ellipse(0, 0, 24, 6, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore();
-      ctx.save(); ctx.translate(x + 52, y + 54); ctx.rotate(-flip * .65);
-      ctx.beginPath(); ctx.ellipse(0, 0, 19, 5, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore();
-    }
-  } else if (type === 'slots') {
-    for (let y = 26; y < size; y += 45) {
-      const inset = 12 + ((y / 45) % 4) * 20;
-      ctx.roundRect(inset, y, size - inset * 2, 12, 6); ctx.fill();
-    }
-  } else if (type === 'waves') {
-    for (let y = 20; y < size; y += 42) for (let x = 16; x < size; x += 46) {
-      const rr = 6 + 5 * (Math.sin(x * .037 + y * .025) + 1);
-      ctx.beginPath(); ctx.arc(x, y + Math.sin(x * .04) * 10, rr, 0, Math.PI * 2); ctx.fill();
-    }
-  }
-
-  const tex = new THREE.CanvasTexture(c);
-  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
-  tex.colorSpace = THREE.SRGBColorSpace;
-  return tex;
-}
-
-function perforatedMaterial(color, pattern, repeatX = 1.4, repeatY = 1) {
-  const alpha = makeAlphaPattern(pattern);
-  alpha.repeat.set(repeatX, repeatY);
-  const m = new THREE.MeshStandardMaterial({
-    color,
-    metalness: .9,
-    roughness: .25,
-    alphaMap: alpha,
-    transparent: true,
-    alphaTest: .48,
-    side: THREE.DoubleSide,
-  });
-  return m;
-}
-
-function addPerforatedRun({ z, count = 4, panelLength = 3.3, gap = .14, height = 2.08, material, postMaterial = MAT.anthracite }) {
-  let cursor = z;
-  for (let i = 0; i < count; i++) {
-    const center = cursor - panelLength / 2;
-    const panel = mesh(new THREE.PlaneGeometry(panelLength, height), material);
-    panel.rotation.y = Math.PI / 2;
-    panel.position.set(3.72, 1.22, center);
-    fenceRoot.add(panel);
-    // subtle back layer gives cut-outs depth against light
-    const frameTop = mesh(new THREE.BoxGeometry(.055, .06, panelLength), postMaterial);
-    frameTop.position.set(3.70, 2.26, center); fenceRoot.add(frameTop);
-    const frameBottom = frameTop.clone(); frameBottom.position.y = .18; fenceRoot.add(frameBottom);
-    addPost(cursor + .02, 3.72, 2.25, postMaterial);
-    cursor -= panelLength + gap;
-  }
-  addPost(cursor + gap, 3.72, 2.25, postMaterial);
-  return cursor;
-}
-
-function addSlatRun(z, count = 4, panelLength = 3.1, gap = .14) {
-  let cursor = z;
-  for (let p = 0; p < count; p++) {
-    const center = cursor - panelLength / 2;
-    for (let i = 0; i < 10; i++) {
-      const slat = mesh(new THREE.BoxGeometry(.06, .105, panelLength), MAT.anthracite);
-      slat.position.set(3.72, .39 + i * .19, center);
-      fenceRoot.add(slat);
-    }
-    addPost(cursor, 3.72, 2.25, MAT.graphite);
-    cursor -= panelLength + gap;
-  }
-  addPost(cursor + gap, 3.72, 2.25, MAT.graphite);
-  return cursor;
-}
-
-// Chapter 1: slim horizontal metal rhythm.
-addSlatRun(-3.5, 5, 3.2, .12);
-
-// Chapter 2: natural aluminium geometric perforation.
-const geoMat = perforatedMaterial(0xbfc1bd, 'geo', 1.5, 1);
-addPerforatedRun({ z: -21.5, count: 5, panelLength: 3.25, material: geoMat, postMaterial: MAT.graphite });
-
-// Chapter 3: warm organic custom-cut pattern.
-const leafMat = perforatedMaterial(0x7c756b, 'leaf', 1.7, 1.15);
-addPerforatedRun({ z: -40.5, count: 5, panelLength: 3.3, material: leafMat, postMaterial: MAT.warmMetal });
-
-// Transition: denser perforation.
-const dotsMat = perforatedMaterial(0x25282b, 'waves', 1.55, 1.1);
-addPerforatedRun({ z: -59.5, count: 3, panelLength: 3.45, material: dotsMat, postMaterial: MAT.anthracite });
-
-// Chapter 4: oversized sliding gate. The gate moves as the visitor reaches it.
-const gateRoot = new THREE.Group();
-gateRoot.position.set(0, 0, -70.6);
-fenceRoot.add(gateRoot);
-const gateMat = perforatedMaterial(0x17191c, 'slots', 2.15, 1.15);
-const gatePanel = mesh(new THREE.PlaneGeometry(7.4, 2.18), gateMat);
-gatePanel.rotation.y = Math.PI / 2;
-gatePanel.position.set(3.72, 1.27, -3.7);
-gateRoot.add(gatePanel);
-const gateTop = mesh(new THREE.BoxGeometry(.075, .07, 7.4), MAT.anthracite);
-gateTop.position.set(3.69, 2.37, -3.7); gateRoot.add(gateTop);
-const gateBottom = gateTop.clone(); gateBottom.position.y = .16; gateRoot.add(gateBottom);
-addPost(-70.55, 3.72, 2.38, MAT.anthracite, .22);
-addPost(-78.2, 3.72, 2.38, MAT.anthracite, .22);
-
-// Fence section that receives the open gate.
-const receiverMat = perforatedMaterial(0x232528, 'slots', 1.6, 1.1);
-addPerforatedRun({ z: -78.5, count: 4, panelLength: 3.1, material: receiverMat, postMaterial: MAT.anthracite });
-
-// Chapter 6: a shorter decorative run continues beyond the gate.
-const dividerMat = perforatedMaterial(0x1b1d20, 'leaf', 1.45, 1.05);
-addPerforatedRun({ z: -94, count: 4, panelLength: 3.0, height: 2.25, material: dividerMat, postMaterial: MAT.graphite });
-
-// --- Architectural reveal behind the gate ----------------------------------
-// The carport is scenery: a calm, premium destination after the fence sequence.
-const propertyRoot = new THREE.Group();
-scene.add(propertyRoot);
-
-// Driveway inside the property.
-const driveway = mesh(new THREE.PlaneGeometry(13.2, 26), new THREE.MeshStandardMaterial({ color: 0x888884, roughness: .96 }));
-driveway.rotation.x = -Math.PI / 2;
-driveway.position.set(9.3, .012, -82.5);
-propertyRoot.add(driveway);
-
-// Carport proportions: long, low, architectural, with a usable roof terrace.
-const carport = new THREE.Group();
-carport.position.set(0, 0, 0);
-propertyRoot.add(carport);
-const cpX1 = 7.7, cpX2 = 15.3, cpZ1 = -78.4, cpZ2 = -86.2;
-const cpY = 3.15;
-
-function addCarportPost(x, z) {
-  const post = mesh(new THREE.BoxGeometry(.22, cpY, .22), MAT.graphite);
-  post.position.set(x, cpY / 2, z);
-  carport.add(post);
-}
-[[cpX1,cpZ1],[cpX2,cpZ1],[cpX1,cpZ2],[cpX2,cpZ2]].forEach(([x,z]) => addCarportPost(x,z));
-
-// Perimeter beams and thin roof slab.
-const beamFront = mesh(new THREE.BoxGeometry(cpX2-cpX1+.25, .28, .24), MAT.anthracite);
-beamFront.position.set((cpX1+cpX2)/2, cpY-.12, cpZ1); carport.add(beamFront);
-const beamBack = beamFront.clone(); beamBack.position.z = cpZ2; carport.add(beamBack);
-const beamSide = mesh(new THREE.BoxGeometry(.24, .28, cpZ1-cpZ2+.25), MAT.anthracite);
-beamSide.position.set(cpX1, cpY-.12, (cpZ1+cpZ2)/2); carport.add(beamSide);
-const beamSide2 = beamSide.clone(); beamSide2.position.x = cpX2; carport.add(beamSide2);
-const roof = mesh(new THREE.BoxGeometry(cpX2-cpX1+.45, .22, cpZ1-cpZ2+.45), MAT.darkConcrete);
-roof.position.set((cpX1+cpX2)/2, cpY+.08, (cpZ1+cpZ2)/2); carport.add(roof);
-
-// Warm ceiling plane gives the carport depth as the camera passes around it.
-const ceilingMat = new THREE.MeshStandardMaterial({ color: 0x7b7062, roughness: .72, metalness: .12 });
-const ceiling = mesh(new THREE.PlaneGeometry(cpX2-cpX1-.35, cpZ1-cpZ2-.35), ceilingMat, false, false);
-ceiling.rotation.x = Math.PI / 2;
-ceiling.position.set((cpX1+cpX2)/2, cpY-.27, (cpZ1+cpZ2)/2);
-carport.add(ceiling);
-
-// Roof-terrace railing, deliberately using the same perforated language as the fence.
-const terraceMat = perforatedMaterial(0x202326, 'geo', 1.7, .72);
-function terracePanel(w, h, x, y, z, rotY = 0) {
-  const panel = mesh(new THREE.PlaneGeometry(w, h), terraceMat);
-  panel.position.set(x, y, z); panel.rotation.y = rotY; carport.add(panel);
-}
-const railY = cpY + .78;
-terracePanel(cpX2-cpX1, 1.05, (cpX1+cpX2)/2, railY, cpZ2-.12, 0);
-terracePanel(cpZ1-cpZ2, 1.05, cpX2+.12, railY, (cpZ1+cpZ2)/2, Math.PI/2);
-terracePanel(4.2, 1.05, cpX1+2.1, railY, cpZ1+.12, 0);
-
-// Minimal car under the roof for scale.
-const car = new THREE.Group();
-const carBody = mesh(new THREE.BoxGeometry(1.85, .58, 4.25), new THREE.MeshStandardMaterial({ color: 0x202225, metalness: .72, roughness: .24 }));
-carBody.position.set(11.55, .62, -82.3); car.add(carBody);
-const cabin = mesh(new THREE.BoxGeometry(1.55, .58, 1.9), MAT.glass, false, false);
-cabin.position.set(11.55, 1.12, -82.5); car.add(cabin);
-for (const [x,z] of [[10.67,-80.9],[12.43,-80.9],[10.67,-83.7],[12.43,-83.7]]) {
-  const wh = mesh(new THREE.CylinderGeometry(.35,.35,.18,18), new THREE.MeshStandardMaterial({color:0x111214,roughness:.9}));
-  wh.rotation.z = Math.PI/2; wh.position.set(x,.39,z); car.add(wh);
-}
-propertyRoot.add(car);
-
-// Exterior staircase climbing to the roof terrace along the rear side.
-const stairRoot = new THREE.Group();
-propertyRoot.add(stairRoot);
-const stepMat = new THREE.MeshStandardMaterial({ color: 0x595b5e, metalness: .58, roughness: .5 });
-const stairCount = 14;
-for (let i = 0; i < stairCount; i++) {
-  const step = mesh(new THREE.BoxGeometry(1.18, .11, .38), stepMat);
-  step.position.set(15.9 + i * .11, .12 + i * .215, -87.0 - i * .30);
-  stairRoot.add(step);
-}
-const landing = mesh(new THREE.BoxGeometry(1.55,.15,1.4), stepMat);
-landing.position.set(17.45, 3.09, -91.15); stairRoot.add(landing);
-// Slim stair stringers / handrails.
-for (const side of [-.58,.58]) {
-  const rail = mesh(new THREE.BoxGeometry(.06,.06,5.3), MAT.anthracite);
-  rail.position.set(16.65+side,1.75,-89.05);
-  rail.rotation.x = -.60; rail.rotation.y = -.34; stairRoot.add(rail);
-}
-
-// House mass behind the carport to make the terrace destination legible.
-const house2 = mesh(new THREE.BoxGeometry(9.3, 4.15, 8.0), new THREE.MeshStandardMaterial({ color: 0xc9c5bb, roughness: .92 }));
-house2.position.set(22.6, 2.07, -87.8); propertyRoot.add(house2);
-const glazing = mesh(new THREE.PlaneGeometry(4.7, 2.1), MAT.glass, false, false);
-glazing.rotation.y = -Math.PI/2; glazing.position.set(17.93, 2.15, -84.8); propertyRoot.add(glazing);
-
-// Soft lights guide the eye through the opened gate to the stairs.
-const warm = new THREE.PointLight(0xffc98d, 7, 15, 2);
-warm.position.set(11.5, 2.55, -82.3); propertyRoot.add(warm);
-const stairGlow = new THREE.PointLight(0xc2ff36, 3.0, 7, 2);
-stairGlow.position.set(16.7, 1.0, -89.4); propertyRoot.add(stairGlow);
-
-// A few acid marker lights as a brand motif.
-for (const [x,z] of [[3.2,-20.8],[3.2,-58.8],[3.2,-72.0],[7.0,-77.0],[16.0,-90.0]]) {
-  const glow = new THREE.PointLight(0xc2ff36, 2.5, 4.5, 2);
-  glow.position.set(x, .24, z);
-  scene.add(glow);
-  const marker = mesh(new THREE.BoxGeometry(.08, .08, .08), new THREE.MeshBasicMaterial({ color: 0xc2ff36 }), false, false);
-  marker.position.copy(glow.position); scene.add(marker);
-}
-
-// --- Scroll / camera --------------------------------------------------------
-let targetProgress = 0;
-let smoothProgress = 0;
-let pointerX = 0, pointerY = 0;
-
-// Camera route: first parallel to the fence, then through the open gate,
-// then a deliberate architectural orbit around the carport, ending at the stairs.
-const cameraPath = new THREE.CatmullRomCurve3([
-  new THREE.Vector3(-.32, 1.68, 7),
-  new THREE.Vector3(-.25, 1.70, -18),
-  new THREE.Vector3(-.38, 1.66, -42),
-  new THREE.Vector3(-.28, 1.69, -61.5),
-  new THREE.Vector3(.15, 1.67, -70.9),
-  new THREE.Vector3(2.15, 1.66, -74.2),
-  new THREE.Vector3(5.35, 1.65, -74.7),
-  new THREE.Vector3(6.15, 1.76, -76.0),
-  new THREE.Vector3(10.4, 1.86, -74.9),
-  new THREE.Vector3(15.9, 1.92, -76.4),
-  new THREE.Vector3(16.65, 1.88, -82.1),
-  new THREE.Vector3(14.65, 1.72, -88.3),
-], false, 'catmullrom', .35);
-
-const lookPath = new THREE.CatmullRomCurve3([
-  new THREE.Vector3(2.8, 1.3, -3),
-  new THREE.Vector3(2.9, 1.3, -27),
-  new THREE.Vector3(2.9, 1.3, -50),
-  new THREE.Vector3(3.4, 1.32, -69),
-  new THREE.Vector3(5.5, 1.35, -75.0),
-  new THREE.Vector3(10.8, 1.7, -81.8),
-  new THREE.Vector3(11.5, 1.75, -82.4),
-  new THREE.Vector3(11.7, 1.78, -82.6),
-  new THREE.Vector3(12.0, 1.95, -83.0),
-  new THREE.Vector3(15.9, 1.95, -88.6),
-  new THREE.Vector3(16.75, 1.8, -89.9),
-  new THREE.Vector3(16.75, 1.8, -89.9),
-], false, 'catmullrom', .35);
-
-function getProgress() {
-  const max = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
-  return THREE.MathUtils.clamp(window.scrollY / max, 0, 1);
-}
-
-function updateChapter(p) {
-  const chapter = p < .16 ? '01' : p < .32 ? '02' : p < .49 ? '03' : p < .66 ? '04' : p < .84 ? '05' : '06';
-  chapterNumber.textContent = chapter;
-  progressBar.style.height = `${Math.round(p * 100)}%`;
-}
-
-window.addEventListener('scroll', () => {
-  targetProgress = getProgress();
-  updateChapter(targetProgress);
-}, { passive: true });
-
-window.addEventListener('pointermove', (e) => {
-  pointerX = (e.clientX / window.innerWidth - .5) * 2;
-  pointerY = (e.clientY / window.innerHeight - .5) * 2;
-}, { passive: true });
-
-function animateGate(p) {
-  // The gate is fully open before the camera crosses the fence line.
-  const open = THREE.MathUtils.smoothstep(p, .47, .61);
-  gatePanel.position.z = -3.7 - open * 6.15;
-  gateTop.position.z = gatePanel.position.z;
-  gateBottom.position.z = gatePanel.position.z;
-}
-
-function updateCamera(p, t) {
-  const base = cameraPath.getPointAt(THREE.MathUtils.clamp(p, 0, 1));
-  const target = lookPath.getPointAt(THREE.MathUtils.clamp(p, 0, 1));
-  const px = reduceMotion ? 0 : pointerX * (isMobile ? .025 : .07);
-  const py = reduceMotion ? 0 : pointerY * (isMobile ? .012 : .03);
-
-  camera.position.set(base.x + px, base.y - py + Math.sin(p * Math.PI * 5) * .022, base.z);
-  camera.lookAt(target.x + px * .6, target.y - py, target.z);
-  camera.rotation.z += Math.sin(t * .00018) * .0012;
-}
-
-function render(t = 0) {
-  targetProgress = getProgress();
-  smoothProgress += (targetProgress - smoothProgress) * (reduceMotion ? 1 : .075);
-  updateCamera(smoothProgress, t);
-  animateGate(smoothProgress);
-  renderer.render(scene, camera);
-  requestAnimationFrame(render);
-}
-
-function resize() {
-  camera.aspect = window.innerWidth / window.innerHeight;
-  camera.fov = window.innerWidth <= 800 ? 64 : 55;
-  camera.updateProjectionMatrix();
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, window.innerWidth <= 800 ? 1.35 : 1.8));
-  renderer.setSize(window.innerWidth, window.innerHeight, false);
-}
-window.addEventListener('resize', resize, { passive: true });
-
-updateChapter(getProgress());
-requestAnimationFrame(render);
-
-</script>
 </body>
 </html>
