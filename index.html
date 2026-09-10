@@ -190,7 +190,7 @@ footer { width: 100%; display: flex; justify-content: space-between; gap: 20px; 
   <aside class="chapter-rail" aria-hidden="true">
     <span class="rail-number" id="chapterNumber">01</span>
     <div class="rail-line"><i id="progressBar"></i></div>
-    <span class="rail-total">05</span>
+    <span class="rail-total">06</span>
   </aside>
 
   <main id="story">
@@ -238,15 +238,24 @@ footer { width: 100%; display: flex; justify-content: space-between; gap: 20px; 
       </div>
     </section>
 
-    <section class="story-section" id="stene" data-chapter="05" data-tone="light">
+    <section class="story-section" id="carport" data-chapter="05" data-tone="dark">
       <div class="copy copy-right narrow">
-        <p class="eyebrow"><span></span> 05 — DEKORATIVNE STENE</p>
-        <h2>Isti material.<br>Nov <em>prostor.</em></h2>
-        <p>Perforirani kovinski paneli niso samo za mejo parcele. Kot dekorativne predelne stene ustvarjajo zasebnost, filtrirajo svetlobo in povezujejo interier z arhitekturo.</p>
+        <p class="eyebrow"><span></span> 05 — ZA OGRAJO</p>
+        <h2>Meja izgine.<br><em>Prostor se odpre.</em></h2>
+        <p>Ko se drsna vrata odprejo, se pogled nadaljuje v arhitekturo objekta. Ograja ne stoji sama zase — njen material, raster in proporci povežejo dovoz, nadstrešek in bivalni del v celoto.</p>
+        <div class="micro-note"><i></i> Kamera prečka odprta vrata in obkroži nadstrešek</div>
       </div>
     </section>
 
-    <section class="story-section contact-section" id="kontakt" data-chapter="05" data-tone="dark">
+    <section class="story-section" id="stene" data-chapter="06" data-tone="light">
+      <div class="copy copy-left narrow">
+        <p class="eyebrow"><span></span> 06 — DETAIL, KI POVEŽE HIŠO</p>
+        <h2>Od ograje do<br><em>terase.</em></h2>
+        <p>Perforirani elementi se lahko nadaljujejo ob objektu kot senčila ali dekorativne predelne stene. Pot se zaključi pri stopnicah na strešno teraso — tam, kjer kovinski detajl postane del vsakodnevnega prostora.</p>
+      </div>
+    </section>
+
+    <section class="story-section contact-section" id="kontakt" data-chapter="06" data-tone="dark">
       <div class="contact-card">
         <p class="eyebrow"><span></span> IMATE IDEJO? MI IMAMO REŠITEV.</p>
         <h2>Narišite jo.<br><em>Mi jo izrežemo.</em></h2>
@@ -357,18 +366,18 @@ function mesh(geo, mat, cast = true, receive = true) {
 }
 
 // --- Ground and architectural background -----------------------------------
-const ground = mesh(new THREE.PlaneGeometry(34, 190), new THREE.MeshStandardMaterial({ color: 0x9b9a94, roughness: .94 }));
+const ground = mesh(new THREE.PlaneGeometry(42, 230), new THREE.MeshStandardMaterial({ color: 0x9b9a94, roughness: .94 }));
 ground.rotation.x = -Math.PI / 2;
-ground.position.set(0, 0, -78);
+ground.position.set(4, 0, -90);
 scene.add(ground);
 
-const road = mesh(new THREE.PlaneGeometry(5.8, 190), new THREE.MeshStandardMaterial({ color: 0x737578, roughness: .98 }));
+const road = mesh(new THREE.PlaneGeometry(5.8, 205), new THREE.MeshStandardMaterial({ color: 0x737578, roughness: .98 }));
 road.rotation.x = -Math.PI / 2;
-road.position.set(-.1, .008, -78);
+road.position.set(-.1, .008, -82);
 scene.add(road);
 
-const curb = mesh(new THREE.BoxGeometry(.35, .18, 190), MAT.concrete);
-curb.position.set(3.25, .09, -78);
+const curb = mesh(new THREE.BoxGeometry(.35, .18, 205), MAT.concrete);
+curb.position.set(3.25, .09, -82);
 scene.add(curb);
 
 // Minimal houses behind the fence for scale and architectural atmosphere.
@@ -543,19 +552,110 @@ addPost(-78.2, 3.72, 2.38, MAT.anthracite, .22);
 const receiverMat = perforatedMaterial(0x232528, 'slots', 1.6, 1.1);
 addPerforatedRun({ z: -78.5, count: 4, panelLength: 3.1, material: receiverMat, postMaterial: MAT.anthracite });
 
-// Chapter 5: decorative divider language with more openness.
+// Chapter 6: a shorter decorative run continues beyond the gate.
 const dividerMat = perforatedMaterial(0x1b1d20, 'leaf', 1.45, 1.05);
-addPerforatedRun({ z: -94, count: 7, panelLength: 3.0, height: 2.25, material: dividerMat, postMaterial: MAT.graphite });
+addPerforatedRun({ z: -94, count: 4, panelLength: 3.0, height: 2.25, material: dividerMat, postMaterial: MAT.graphite });
 
-// Final monumental wall / logo plane.
-const endWall = mesh(new THREE.BoxGeometry(.32, 3.4, 14), MAT.darkConcrete);
-endWall.position.set(4.8, 1.7, -121.5);
-scene.add(endWall);
+// --- Architectural reveal behind the gate ----------------------------------
+// The carport is scenery: a calm, premium destination after the fence sequence.
+const propertyRoot = new THREE.Group();
+scene.add(propertyRoot);
+
+// Driveway inside the property.
+const driveway = mesh(new THREE.PlaneGeometry(13.2, 26), new THREE.MeshStandardMaterial({ color: 0x888884, roughness: .96 }));
+driveway.rotation.x = -Math.PI / 2;
+driveway.position.set(9.3, .012, -82.5);
+propertyRoot.add(driveway);
+
+// Carport proportions: long, low, architectural, with a usable roof terrace.
+const carport = new THREE.Group();
+carport.position.set(0, 0, 0);
+propertyRoot.add(carport);
+const cpX1 = 7.7, cpX2 = 15.3, cpZ1 = -78.4, cpZ2 = -86.2;
+const cpY = 3.15;
+
+function addCarportPost(x, z) {
+  const post = mesh(new THREE.BoxGeometry(.22, cpY, .22), MAT.graphite);
+  post.position.set(x, cpY / 2, z);
+  carport.add(post);
+}
+[[cpX1,cpZ1],[cpX2,cpZ1],[cpX1,cpZ2],[cpX2,cpZ2]].forEach(([x,z]) => addCarportPost(x,z));
+
+// Perimeter beams and thin roof slab.
+const beamFront = mesh(new THREE.BoxGeometry(cpX2-cpX1+.25, .28, .24), MAT.anthracite);
+beamFront.position.set((cpX1+cpX2)/2, cpY-.12, cpZ1); carport.add(beamFront);
+const beamBack = beamFront.clone(); beamBack.position.z = cpZ2; carport.add(beamBack);
+const beamSide = mesh(new THREE.BoxGeometry(.24, .28, cpZ1-cpZ2+.25), MAT.anthracite);
+beamSide.position.set(cpX1, cpY-.12, (cpZ1+cpZ2)/2); carport.add(beamSide);
+const beamSide2 = beamSide.clone(); beamSide2.position.x = cpX2; carport.add(beamSide2);
+const roof = mesh(new THREE.BoxGeometry(cpX2-cpX1+.45, .22, cpZ1-cpZ2+.45), MAT.darkConcrete);
+roof.position.set((cpX1+cpX2)/2, cpY+.08, (cpZ1+cpZ2)/2); carport.add(roof);
+
+// Warm ceiling plane gives the carport depth as the camera passes around it.
+const ceilingMat = new THREE.MeshStandardMaterial({ color: 0x7b7062, roughness: .72, metalness: .12 });
+const ceiling = mesh(new THREE.PlaneGeometry(cpX2-cpX1-.35, cpZ1-cpZ2-.35), ceilingMat, false, false);
+ceiling.rotation.x = Math.PI / 2;
+ceiling.position.set((cpX1+cpX2)/2, cpY-.27, (cpZ1+cpZ2)/2);
+carport.add(ceiling);
+
+// Roof-terrace railing, deliberately using the same perforated language as the fence.
+const terraceMat = perforatedMaterial(0x202326, 'geo', 1.7, .72);
+function terracePanel(w, h, x, y, z, rotY = 0) {
+  const panel = mesh(new THREE.PlaneGeometry(w, h), terraceMat);
+  panel.position.set(x, y, z); panel.rotation.y = rotY; carport.add(panel);
+}
+const railY = cpY + .78;
+terracePanel(cpX2-cpX1, 1.05, (cpX1+cpX2)/2, railY, cpZ2-.12, 0);
+terracePanel(cpZ1-cpZ2, 1.05, cpX2+.12, railY, (cpZ1+cpZ2)/2, Math.PI/2);
+terracePanel(4.2, 1.05, cpX1+2.1, railY, cpZ1+.12, 0);
+
+// Minimal car under the roof for scale.
+const car = new THREE.Group();
+const carBody = mesh(new THREE.BoxGeometry(1.85, .58, 4.25), new THREE.MeshStandardMaterial({ color: 0x202225, metalness: .72, roughness: .24 }));
+carBody.position.set(11.55, .62, -82.3); car.add(carBody);
+const cabin = mesh(new THREE.BoxGeometry(1.55, .58, 1.9), MAT.glass, false, false);
+cabin.position.set(11.55, 1.12, -82.5); car.add(cabin);
+for (const [x,z] of [[10.67,-80.9],[12.43,-80.9],[10.67,-83.7],[12.43,-83.7]]) {
+  const wh = mesh(new THREE.CylinderGeometry(.35,.35,.18,18), new THREE.MeshStandardMaterial({color:0x111214,roughness:.9}));
+  wh.rotation.z = Math.PI/2; wh.position.set(x,.39,z); car.add(wh);
+}
+propertyRoot.add(car);
+
+// Exterior staircase climbing to the roof terrace along the rear side.
+const stairRoot = new THREE.Group();
+propertyRoot.add(stairRoot);
+const stepMat = new THREE.MeshStandardMaterial({ color: 0x595b5e, metalness: .58, roughness: .5 });
+const stairCount = 14;
+for (let i = 0; i < stairCount; i++) {
+  const step = mesh(new THREE.BoxGeometry(1.18, .11, .38), stepMat);
+  step.position.set(15.9 + i * .11, .12 + i * .215, -87.0 - i * .30);
+  stairRoot.add(step);
+}
+const landing = mesh(new THREE.BoxGeometry(1.55,.15,1.4), stepMat);
+landing.position.set(17.45, 3.09, -91.15); stairRoot.add(landing);
+// Slim stair stringers / handrails.
+for (const side of [-.58,.58]) {
+  const rail = mesh(new THREE.BoxGeometry(.06,.06,5.3), MAT.anthracite);
+  rail.position.set(16.65+side,1.75,-89.05);
+  rail.rotation.x = -.60; rail.rotation.y = -.34; stairRoot.add(rail);
+}
+
+// House mass behind the carport to make the terrace destination legible.
+const house2 = mesh(new THREE.BoxGeometry(9.3, 4.15, 8.0), new THREE.MeshStandardMaterial({ color: 0xc9c5bb, roughness: .92 }));
+house2.position.set(22.6, 2.07, -87.8); propertyRoot.add(house2);
+const glazing = mesh(new THREE.PlaneGeometry(4.7, 2.1), MAT.glass, false, false);
+glazing.rotation.y = -Math.PI/2; glazing.position.set(17.93, 2.15, -84.8); propertyRoot.add(glazing);
+
+// Soft lights guide the eye through the opened gate to the stairs.
+const warm = new THREE.PointLight(0xffc98d, 7, 15, 2);
+warm.position.set(11.5, 2.55, -82.3); propertyRoot.add(warm);
+const stairGlow = new THREE.PointLight(0xc2ff36, 3.0, 7, 2);
+stairGlow.position.set(16.7, 1.0, -89.4); propertyRoot.add(stairGlow);
 
 // A few acid marker lights as a brand motif.
-for (const z of [-20.8, -58.8, -93.5, -118]) {
+for (const [x,z] of [[3.2,-20.8],[3.2,-58.8],[3.2,-72.0],[7.0,-77.0],[16.0,-90.0]]) {
   const glow = new THREE.PointLight(0xc2ff36, 2.5, 4.5, 2);
-  glow.position.set(3.2, .24, z);
+  glow.position.set(x, .24, z);
   scene.add(glow);
   const marker = mesh(new THREE.BoxGeometry(.08, .08, .08), new THREE.MeshBasicMaterial({ color: 0xc2ff36 }), false, false);
   marker.position.copy(glow.position); scene.add(marker);
@@ -565,7 +665,38 @@ for (const z of [-20.8, -58.8, -93.5, -118]) {
 let targetProgress = 0;
 let smoothProgress = 0;
 let pointerX = 0, pointerY = 0;
-const travel = 121;
+
+// Camera route: first parallel to the fence, then through the open gate,
+// then a deliberate architectural orbit around the carport, ending at the stairs.
+const cameraPath = new THREE.CatmullRomCurve3([
+  new THREE.Vector3(-.32, 1.68, 7),
+  new THREE.Vector3(-.25, 1.70, -18),
+  new THREE.Vector3(-.38, 1.66, -42),
+  new THREE.Vector3(-.28, 1.69, -61.5),
+  new THREE.Vector3(.15, 1.67, -70.9),
+  new THREE.Vector3(2.15, 1.66, -74.2),
+  new THREE.Vector3(5.35, 1.65, -74.7),
+  new THREE.Vector3(6.15, 1.76, -76.0),
+  new THREE.Vector3(10.4, 1.86, -74.9),
+  new THREE.Vector3(15.9, 1.92, -76.4),
+  new THREE.Vector3(16.65, 1.88, -82.1),
+  new THREE.Vector3(14.65, 1.72, -88.3),
+], false, 'catmullrom', .35);
+
+const lookPath = new THREE.CatmullRomCurve3([
+  new THREE.Vector3(2.8, 1.3, -3),
+  new THREE.Vector3(2.9, 1.3, -27),
+  new THREE.Vector3(2.9, 1.3, -50),
+  new THREE.Vector3(3.4, 1.32, -69),
+  new THREE.Vector3(5.5, 1.35, -75.0),
+  new THREE.Vector3(10.8, 1.7, -81.8),
+  new THREE.Vector3(11.5, 1.75, -82.4),
+  new THREE.Vector3(11.7, 1.78, -82.6),
+  new THREE.Vector3(12.0, 1.95, -83.0),
+  new THREE.Vector3(15.9, 1.95, -88.6),
+  new THREE.Vector3(16.75, 1.8, -89.9),
+  new THREE.Vector3(16.75, 1.8, -89.9),
+], false, 'catmullrom', .35);
 
 function getProgress() {
   const max = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
@@ -573,7 +704,7 @@ function getProgress() {
 }
 
 function updateChapter(p) {
-  const chapter = p < .18 ? '01' : p < .38 ? '02' : p < .58 ? '03' : p < .78 ? '04' : '05';
+  const chapter = p < .16 ? '01' : p < .32 ? '02' : p < .49 ? '03' : p < .66 ? '04' : p < .84 ? '05' : '06';
   chapterNumber.textContent = chapter;
   progressBar.style.height = `${Math.round(p * 100)}%`;
 }
@@ -589,25 +720,22 @@ window.addEventListener('pointermove', (e) => {
 }, { passive: true });
 
 function animateGate(p) {
-  // Gate starts opening at chapter four, rests open, then eases slightly back.
-  const open = THREE.MathUtils.smoothstep(p, .52, .67);
-  const settle = 1 - .18 * THREE.MathUtils.smoothstep(p, .81, .94);
-  gatePanel.position.z = -3.7 - open * 5.65 * settle;
+  // The gate is fully open before the camera crosses the fence line.
+  const open = THREE.MathUtils.smoothstep(p, .47, .61);
+  gatePanel.position.z = -3.7 - open * 6.15;
   gateTop.position.z = gatePanel.position.z;
   gateBottom.position.z = gatePanel.position.z;
 }
 
 function updateCamera(p, t) {
-  const z = 7 - p * travel;
-  const sideDrift = Math.sin(p * Math.PI * 4.5) * .18;
-  const px = reduceMotion ? 0 : pointerX * .08;
-  const py = reduceMotion ? 0 : pointerY * .035;
-  camera.position.set(-.32 + sideDrift + px, 1.68 + Math.sin(p * Math.PI * 5) * .035 - py, z);
+  const base = cameraPath.getPointAt(THREE.MathUtils.clamp(p, 0, 1));
+  const target = lookPath.getPointAt(THREE.MathUtils.clamp(p, 0, 1));
+  const px = reduceMotion ? 0 : pointerX * (isMobile ? .025 : .07);
+  const py = reduceMotion ? 0 : pointerY * (isMobile ? .012 : .03);
 
-  // Look forward, always biased toward the fence. This creates the "walking along it" feeling.
-  const lookX = isMobile ? 2.55 : 2.9;
-  camera.lookAt(lookX + px * 1.2, 1.28 - py, z - (isMobile ? 8.5 : 10.5));
-  camera.rotation.z += Math.sin(t * .00018) * .0015;
+  camera.position.set(base.x + px, base.y - py + Math.sin(p * Math.PI * 5) * .022, base.z);
+  camera.lookAt(target.x + px * .6, target.y - py, target.z);
+  camera.rotation.z += Math.sin(t * .00018) * .0012;
 }
 
 function render(t = 0) {
