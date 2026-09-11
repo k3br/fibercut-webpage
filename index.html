@@ -28,15 +28,15 @@ body {
 }
 a { color: inherit; }
 
-#sceneVideo, .video-fallback {
+#scene, .webgl-fallback {
   position: fixed;
   inset: 0;
   width: 100%;
   height: 100%;
   z-index: 0;
 }
-#sceneVideo { display: block; object-fit: cover; object-position: center center; background: #b9b8b2; transform: translateZ(0); backface-visibility: hidden; }
-.video-fallback { background: linear-gradient(115deg, #1b1d20, #8c8c86); }
+#scene { display: block; }
+.webgl-fallback { background: linear-gradient(115deg, #1b1d20, #8c8c86); }
 .fallback-pattern {
   width: 54vw; height: 100vh; margin-left: auto;
   background-image: radial-gradient(circle at 50% 50%, transparent 0 9px, #17191c 10px 18px, transparent 19px);
@@ -171,7 +171,7 @@ footer { width: 100%; display: flex; justify-content: space-between; gap: 20px; 
   .noise, .scroll-cue i:after { animation: none; }
 }
 
-/* Short video preloader: prevents scrolling while shaders/textures are warmed up. */
+/* Short WebGL preloader: prevents scrolling while shaders/textures are warmed up. */
 body.is-loading { overflow: hidden; }
 .scene-preloader {
   position: fixed; inset: 0; z-index: 1000;
@@ -196,11 +196,11 @@ body.is-loading { overflow: hidden; }
 <body class="is-loading">
   <div class="scene-preloader" id="scenePreloader" aria-hidden="true">
     <div class="scene-preloader-inner">
-      <div class="scene-preloader-label"><span>FIBERCUT / FILM</span><span>PRIPRAVA ARHITEKTURNE SCENE</span></div>
+      <div class="scene-preloader-label"><span>FIBERCUT / 3D</span><span>NALAGANJE 3D PROSTORA</span></div>
       <div class="scene-preloader-line"><i></i></div>
     </div>
   </div>
-  <video id="sceneVideo" aria-hidden="true" muted playsinline preload="auto"></video>
+  <canvas id="scene" aria-hidden="true"></canvas>
   <div class="noise" aria-hidden="true"></div>
   <div class="vignette" aria-hidden="true"></div>
 
@@ -228,7 +228,7 @@ body.is-loading { overflow: hidden; }
       <div class="copy copy-left hero-copy">
         <p class="eyebrow"><span></span> KOVINA / VZOREC / PROSTOR</p>
         <h1>Ograje, ki<br><em>postanejo</em><br>arhitektura.</h1>
-        <p class="lede">Perforirani aluminijasti paneli, kovinske ograje in drsna vrata po meri. Vaša ideja postane vzorec, ki definira objekt.</p>
+        <p class="lede">Perforirani aluminijasti paneli, kovinske ograje in drsna vrata po meri. Sprehodite se skozi prostor in odkrijte kovino kot del arhitekture.</p>
         <div class="actions">
           <a class="button button-solid" href="#ograje">Raziščite možnosti <span>↘</span></a>
           <a class="text-link" href="#kontakt">Pošljite svojo idejo <span>→</span></a>
@@ -303,116 +303,310 @@ body.is-loading { overflow: hidden; }
     </section>
   </main>
 
-  <div class="video-fallback" id="videoFallback" hidden><div class="fallback-pattern"></div></div>
+  <div class="webgl-fallback" id="webglFallback" hidden>
+    <div class="fallback-pattern"></div>
+  </div>
+
   <script>
-  (() => {
-    const video = document.querySelector('#sceneVideo');
-    const loader = document.querySelector('#scenePreloader');
-    const fallback = document.querySelector('#videoFallback');
-    const progressBar = document.querySelector('#progressBar');
-    const chapterNumber = document.querySelector('#chapterNumber');
-    const portrait = window.matchMedia('(max-width: 800px) and (orientation: portrait)').matches;
-    const source = portrait ? 'fibercut-scroll-portrait.mp4' : 'fibercut-scroll-landscape.mp4';
-    let duration = 17;
-    let targetTime = 0;
-    let ready = false;
-    let lastSeekAt = 0;
+window.__fibercutBootStarted = true;
+</script>
+  <script type="module">
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.185.1/build/three.module.js';
+import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.185.1/examples/jsm/loaders/GLTFLoader.js';
+import { RoomEnvironment } from 'https://cdn.jsdelivr.net/npm/three@0.185.1/examples/jsm/environments/RoomEnvironment.js';
 
-    video.src = source;
-    video.muted = true;
-    video.playsInline = true;
-    video.preload = 'auto';
-    video.load();
+const canvas = document.querySelector('#scene');
+const fallback = document.querySelector('#webglFallback');
+const progressBar = document.querySelector('#progressBar');
+const chapterNumber = document.querySelector('#chapterNumber');
+const loaderEl = document.querySelector('#scenePreloader');
+const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const isMobile = window.matchMedia('(max-width: 800px)').matches;
+const isPortrait = window.matchMedia('(orientation: portrait)').matches;
 
-    function progress() {
-      const max = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
-      return Math.max(0, Math.min(1, window.scrollY / max));
-    }
+let renderer;
+try {
+  renderer = new THREE.WebGLRenderer({
+    canvas,
+    antialias: true,
+    alpha: false,
+    powerPreference: 'high-performance'
+  });
+} catch (err) {
+  canvas.hidden = true;
+  fallback.hidden = false;
+  document.body.classList.remove('is-loading');
+  throw err;
+}
 
-    function updateUI(p) {
-      const chapter = p < .18 ? '01' : p < .38 ? '02' : p < .58 ? '03' : p < .78 ? '04' : '05';
-      if (chapterNumber) chapterNumber.textContent = chapter;
-      if (progressBar) progressBar.style.height = `${Math.round(p * 100)}%`;
-    }
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, isMobile ? 1.75 : 2.0));
+renderer.setSize(window.innerWidth, window.innerHeight, false);
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.08;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+document.documentElement.dataset.webgl = 'ready';
 
-    function mapProgressToVideo(p) {
-      // Slightly slower opening, then more time for the gate/carport reveal.
-      if (p < .58) return duration * (p / .58) * .52;
-      const q = (p - .58) / .42;
-      return duration * (.52 + q * .48);
-    }
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0xc7c6c0);
+scene.fog = new THREE.FogExp2(0xc1c1bb, isMobile ? 0.011 : 0.009);
 
-    function onScroll() {
-      const p = progress();
-      targetTime = mapProgressToVideo(p);
-      updateUI(p);
-    }
-    window.addEventListener('scroll', onScroll, { passive: true });
-    onScroll();
+const camera = new THREE.PerspectiveCamera(isMobile ? 64 : 55, window.innerWidth / window.innerHeight, 0.1, 280);
+camera.position.set(-.3, 1.68, 7);
 
-    function seekLoop(now) {
-      if (ready && video.readyState >= 2) {
-        const delta = targetTime - video.currentTime;
-        if (!video.seeking && Math.abs(delta) > 0.025 && now - lastSeekAt > 28) {
-          // Large jumps catch up quickly; normal scrolling remains cinematic.
-          const step = Math.abs(delta) > 1.2 ? delta * .72 : delta * .42;
-          video.currentTime = Math.max(0, Math.min(duration - .03, video.currentTime + step));
-          lastSeekAt = now;
+// Reflection environment gives the metal much more believable response than
+// flat ambient lighting while still being cheap enough for mobile.
+const pmrem = new THREE.PMREMGenerator(renderer);
+const roomEnv = new RoomEnvironment();
+const envRT = pmrem.fromScene(roomEnv, 0.04);
+scene.environment = envRT.texture;
+roomEnv.dispose();
+pmrem.dispose();
+
+const hemi = new THREE.HemisphereLight(0xf3f1e9, 0x4b4d50, 1.35);
+scene.add(hemi);
+const sun = new THREE.DirectionalLight(0xfff0d4, 3.2);
+sun.position.set(-12, 18, 10);
+sun.castShadow = true;
+sun.shadow.mapSize.set(isMobile ? 1024 : 2048, isMobile ? 1024 : 2048);
+sun.shadow.camera.left = -14;
+sun.shadow.camera.right = 14;
+sun.shadow.camera.top = 13;
+sun.shadow.camera.bottom = -5;
+sun.shadow.camera.near = 1;
+sun.shadow.camera.far = 70;
+sun.shadow.bias = -0.00025;
+scene.add(sun);
+
+const fill = new THREE.DirectionalLight(0xc9dcf6, .75);
+fill.position.set(10, 8, -18);
+scene.add(fill);
+
+// A few very cheap warm architectural lights around the final carport scene.
+for (const [x,y,z,power] of [
+  [-4.4,.55,-81,2.1], [5.7,.55,-83,1.9], [-4.7,.55,-92,1.7], [5.8,.55,-94,1.7], [.7,2.45,-88.7,2.7]
+]) {
+  const l = new THREE.PointLight(0xffd09a, power, 12, 2);
+  l.position.set(x,y,z);
+  scene.add(l);
+}
+
+let root = null;
+let gateParts = [];
+let gateBaseX = [];
+let targetProgress = 0;
+let smoothProgress = 0;
+let pointerX = 0;
+let pointerY = 0;
+let started = false;
+
+function getProgress() {
+  const max = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+  return THREE.MathUtils.clamp(window.scrollY / max, 0, 1);
+}
+
+function updateChapter(p) {
+  const chapter = p < .18 ? '01' : p < .38 ? '02' : p < .58 ? '03' : p < .78 ? '04' : '05';
+  chapterNumber.textContent = chapter;
+  progressBar.style.height = `${Math.round(p * 100)}%`;
+}
+
+function ease01(v) {
+  v = THREE.MathUtils.clamp(v, 0, 1);
+  return v * v * (3 - 2 * v);
+}
+
+function animateGate(p) {
+  if (!gateParts.length) return;
+  const open = ease01((p - .60) / .11);
+  const slide = open * 7.0;
+  gateParts.forEach((part, i) => {
+    part.position.x = gateBaseX[i] + slide;
+  });
+}
+
+function updateCamera(p, t) {
+  const baseFov = isMobile ? 64 : 55;
+  const px = reduceMotion || isMobile ? 0 : pointerX * .07;
+  const py = reduceMotion || isMobile ? 0 : pointerY * .03;
+
+  let x = -.30 + px;
+  let y = 1.68 - py;
+  let z;
+  let lookX;
+  let lookY = 1.34 - py;
+  let lookZ;
+
+  if (p < .60) {
+    const q = ease01(p / .60);
+    z = THREE.MathUtils.lerp(7, -54.5, q);
+    const centre = ease01((p - .49) / .11);
+    lookX = THREE.MathUtils.lerp(isMobile ? 2.55 : 2.9, .45, centre) + px;
+    lookZ = z - (isMobile ? 8.8 : 10.5);
+  } else {
+    // The architectural lift starts as soon as the gate opens. The camera still
+    // travels through the opening, but simultaneously rises and moves left.
+    const q = ease01((p - .60) / .40);
+    const endX = isMobile && isPortrait ? -7.15 : -7.75;
+    const endY = isMobile && isPortrait ? 7.25 : 7.75;
+    const endZ = isMobile && isPortrait ? -74.90 : -75.45;
+
+    x = THREE.MathUtils.lerp(-.30, endX, q) + px;
+    y = THREE.MathUtils.lerp(1.68, endY, q) - py;
+    z = THREE.MathUtils.lerp(-54.5, endZ, q);
+
+    lookX = THREE.MathUtils.lerp(.45, .20, q) + px;
+    lookY = THREE.MathUtils.lerp(1.34, 2.92, q) - py;
+    lookZ = THREE.MathUtils.lerp(-66.5, -89.05, q);
+  }
+
+  camera.position.set(x, y, z);
+  camera.fov += (baseFov - camera.fov) * .2;
+  camera.updateProjectionMatrix();
+  camera.lookAt(lookX, lookY, lookZ);
+
+  if (!reduceMotion && !isMobile && p < .58) {
+    camera.rotation.z += Math.sin(t * .00018) * .0011;
+  }
+}
+
+window.addEventListener('scroll', () => {
+  targetProgress = getProgress();
+  updateChapter(targetProgress);
+}, { passive: true });
+
+if (!isMobile) {
+  window.addEventListener('pointermove', (e) => {
+    pointerX = (e.clientX / window.innerWidth - .5) * 2;
+    pointerY = (e.clientY / window.innerHeight - .5) * 2;
+  }, { passive: true });
+}
+
+function render(t = 0) {
+  if (!started) return;
+  targetProgress = getProgress();
+  const delta = targetProgress - smoothProgress;
+  const follow = reduceMotion ? 1 : (isMobile ? .30 : .09);
+  if (isMobile && Math.abs(delta) > .11) smoothProgress += delta * .58;
+  else smoothProgress += delta * follow;
+
+  updateCamera(smoothProgress, t);
+  animateGate(smoothProgress);
+  renderer.render(scene, camera);
+  requestAnimationFrame(render);
+}
+
+function resize() {
+  const mobile = window.innerWidth <= 800;
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.fov = mobile ? 64 : 55;
+  camera.updateProjectionMatrix();
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, mobile ? 1.75 : 2.0));
+  renderer.setSize(window.innerWidth, window.innerHeight, false);
+}
+window.addEventListener('resize', resize, { passive: true });
+
+const manager = new THREE.LoadingManager();
+manager.onProgress = (_url, loaded, total) => {
+  const line = loaderEl?.querySelector('.scene-preloader-line i');
+  if (line && total) {
+    const pct = Math.max(8, Math.min(96, (loaded / total) * 100));
+    line.style.width = `${pct}%`;
+    line.style.transform = 'none';
+    line.style.animation = 'none';
+  }
+};
+
+const gltfLoader = new GLTFLoader(manager);
+const loadStarted = performance.now();
+
+gltfLoader.load(
+  'fibercut-scene.glb',
+  async (gltf) => {
+    root = gltf.scene;
+    root.name = 'FiberCutBakedScene';
+    scene.add(root);
+
+    const maxAniso = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+    root.traverse((obj) => {
+      if (!obj.isMesh) return;
+      const name = obj.name || '';
+      const mats = Array.isArray(obj.material) ? obj.material : [obj.material];
+      mats.forEach((mat) => {
+        if (!mat) return;
+        for (const key of ['map','normalMap','roughnessMap','metalnessMap','aoMap','emissiveMap']) {
+          if (mat[key]) mat[key].anisotropy = maxAniso;
+        }
+        mat.needsUpdate = true;
+      });
+
+      const isReceiver = /Ground|Road|Driveway|CarportPad/i.test(name);
+      const isHeroCaster = isMobile
+        ? /Carport|Stair|SlidingGate|Rail/i.test(name)
+        : /Carport|Stair|SlidingGate|Rail|Slat|Geo|Leaf|Waves|Corner|Gate/i.test(name);
+      obj.receiveShadow = isReceiver || /Carport/i.test(name);
+      obj.castShadow = isHeroCaster && !/BakedShadow|Backdrop|ArtificialTurf/i.test(name);
+
+      if (/MountainBackdrop/i.test(name)) {
+        obj.castShadow = false;
+        obj.receiveShadow = false;
+        obj.renderOrder = -10;
+        if (obj.material) {
+          obj.material.depthWrite = false;
+          obj.material.fog = false;
         }
       }
-      requestAnimationFrame(seekLoop);
-    }
-
-    const minimumLoader = new Promise(resolve => setTimeout(resolve, 2000));
-    const mediaReady = new Promise(resolve => {
-      let resolved = false;
-      const done = () => { if (!resolved) { resolved = true; resolve(); } };
-      video.addEventListener('loadedmetadata', () => {
-        if (Number.isFinite(video.duration) && video.duration > 1) duration = video.duration;
-      }, { once: true });
-      video.addEventListener('canplay', done, { once: true });
-      video.addEventListener('loadeddata', done, { once: true });
-      setTimeout(done, 6000);
     });
 
-    async function boot() {
-      try {
-        await mediaReady;
-        // Prime Android/iOS decoder while the loader still covers the scene.
-        try {
-          await video.play();
-          await new Promise(resolve => setTimeout(resolve, 220));
-          video.pause();
-          video.currentTime = 0.01;
-        } catch (_) {
-          video.pause();
-        }
-        await minimumLoader;
-        targetTime = mapProgressToVideo(progress());
-        ready = true;
-        document.body.classList.remove('is-loading');
-        if (loader) {
-          loader.classList.add('is-ready');
-          setTimeout(() => loader.remove(), 450);
-        }
-        requestAnimationFrame(seekLoop);
-      } catch (_) {
-        video.hidden = true;
-        if (fallback) fallback.hidden = false;
-        document.body.classList.remove('is-loading');
-        if (loader) loader.classList.add('is-ready');
-      }
+    gateParts = [
+      root.getObjectByName('SlidingGatePanel'),
+      root.getObjectByName('SlidingGateTop'),
+      root.getObjectByName('SlidingGateBottom')
+    ].filter(Boolean);
+    gateBaseX = gateParts.map(p => p.position.x);
+
+    targetProgress = getProgress();
+    smoothProgress = targetProgress;
+    updateChapter(targetProgress);
+    updateCamera(smoothProgress, performance.now());
+    animateGate(smoothProgress);
+
+    // Compile all imported materials before scroll is enabled.
+    try {
+      if (typeof renderer.compileAsync === 'function') await renderer.compileAsync(scene, camera);
+      else renderer.compile(scene, camera);
+    } catch (_) {}
+
+    renderer.render(scene, camera);
+
+    // Keep the loader visible for about two seconds by design. This gives the
+    // browser time to upload the embedded PBR textures and avoids shader work
+    // being discovered during the user's first fast swipe.
+    const elapsed = performance.now() - loadStarted;
+    if (elapsed < 2000) await new Promise(r => setTimeout(r, 2000 - elapsed));
+    await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+
+    const line = loaderEl?.querySelector('.scene-preloader-line i');
+    if (line) line.style.width = '100%';
+    document.body.classList.remove('is-loading');
+    if (loaderEl) {
+      loaderEl.classList.add('is-ready');
+      setTimeout(() => loaderEl.remove(), 450);
     }
 
-    video.addEventListener('error', () => {
-      video.hidden = true;
-      if (fallback) fallback.hidden = false;
-      document.body.classList.remove('is-loading');
-      if (loader) loader.classList.add('is-ready');
-    }, { once: true });
-
-    boot();
-  })();
-  </script>
+    started = true;
+    requestAnimationFrame(render);
+  },
+  undefined,
+  (err) => {
+    console.error('FiberCut scene failed to load', err);
+    canvas.hidden = true;
+    fallback.hidden = false;
+    document.body.classList.remove('is-loading');
+    if (loaderEl) loaderEl.classList.add('is-ready');
+  }
+);
+</script>
 </body>
 </html>
