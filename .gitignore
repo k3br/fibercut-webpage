@@ -1,0 +1,16 @@
+# Local development tools, dependencies, previews and CAD reports.
+/.tools/
+/tools/
+/AGENTS.md
+/PROJECT_CONTEXT.md
+
+# Source CAD and intermediate exports must never be published.
+*.igs
+*.iges
+*.brep
+*.raw.glb
+node_modules/
+__pycache__/
+*.pyc
+.DS_Store
+Thumbs.db
