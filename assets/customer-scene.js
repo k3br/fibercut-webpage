@@ -22,7 +22,8 @@ export async function installCustomerModels(scene, loader, isMobile) {
   };
   const gate = renderModel(gateAsset.scene, 'CustomerGateSite');
   gate.rotation.y = -.307;
-  gate.position.set(-6.3, .03, -74.5);
+  // The right fixed post meets the roadside fence on the curb centreline.
+  gate.position.set(-5.6646, .03, -74.5);
   const movingGate = gate.getObjectByName('SlidingGateAssembly');
   if (!movingGate || movingGate.children.length !== 16) throw new Error('Customer sliding gate assembly is missing parts');
 
@@ -87,8 +88,10 @@ export const journey = [
   {p: .705, position: [-2.0,2.15,-85.65], target: [-1.02,2.61,-86.88], fov: 38, detail: 'carport-roof-joint'},
   {p: .725, position: [-2.0,2.15,-85.65], target: [-1.02,2.61,-86.88], fov: 38, detail: 'carport-roof-joint'},
   {p: .755, position: [-2.2,1.68,-89],   target: [1.2,1.7,-89]},
-  {p: .80,  position: [-2.65,1.68,-95.3],target: [-3.15,2.9,-98.5]},
-  {p: .89,  position: [-2.65,3.97,-98.7],target: [-3.45,3.65,-100]},
-  {p: .96,  position: [-1.65,3.97,-99.8],target: [-4.02,3.55,-100.55]},
-  {p: 1,    position: [-1.65,3.97,-99.8],target: [-4.02,3.55,-100.55]}
+  // Walk up the tread centreline, keeping the outer railing in view.
+  {p: .80,  position: [-3.525,1.68,-95.25],target: [-3.18,2.75,-98.3]},
+  {p: .845, position: [-3.525,2.83,-96.9], target: [-3.18,3.05,-99.1]},
+  {p: .89,  position: [-3.525,4.19,-98.75],target: [-3.18,3.55,-100.35]},
+  {p: .96,  position: [-3.525,4.19,-100],target: [-4.02,3.55,-100.55]},
+  {p: 1,    position: [-3.525,4.19,-100],target: [-4.02,3.55,-100.55]}
 ];

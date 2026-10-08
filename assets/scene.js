@@ -3,6 +3,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { installCustomerModels, journey } from './customer-scene.js';
+import { installEnvironment } from './environment.js';
 
 const canvas = document.querySelector('#scene');
 const fallback = document.querySelector('#webglFallback');
@@ -145,7 +146,17 @@ let started = false;
 
 function getProgress() {
   const max = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
-  return THREE.MathUtils.clamp(window.scrollY / max, 0, 1);
+  const scroll = THREE.MathUtils.clamp(window.scrollY / max, 0, 1);
+  // Spend more physical scrolling on turns, rather than delaying the camera.
+  const sections = [[0,.28,1],[.28,.40,1.8],[.40,.66,1],[.66,.755,3],[.755,.80,2.5],[.80,.96,2],[.96,1,1]];
+  const total = sections.reduce((sum,[a,b,weight])=>sum+(b-a)*weight,0);
+  let remaining = scroll * total;
+  for (const [a,b,weight] of sections) {
+    const distance = (b-a)*weight;
+    if (remaining <= distance) return a + remaining/weight;
+    remaining -= distance;
+  }
+  return 1;
 }
 
 function updateChapter(p) {
@@ -163,7 +174,7 @@ function animateGate(p) {
   customerModels?.animate(p);
 }
 
-function updateCamera(p, t) {
+function updateCamera(p, t, elapsed = 0) {
   let index = journey.findIndex((frame, i) => i < journey.length - 1 && p <= journey[i + 1].p);
   if (index < 0) index = journey.length - 2;
   const a = journey[index], b = journey[index + 1];
@@ -203,11 +214,12 @@ function render(t = 0) {
   const delta = targetProgress - smoothProgress;
   const elapsed = Math.min(.1, (t - lastFrame) / 1000 || 1 / 60);
   lastFrame = t;
-  const follow = reduceMotion ? 1 : 1 - Math.exp(-elapsed * (isMobile ? 18 : 8));
-  if (isMobile && Math.abs(delta) > .11) smoothProgress += delta * .58;
-  else smoothProgress += delta * follow;
+  // A light settling motion between steps; stair climbing stays scroll-direct.
+  const onStairs = targetProgress >= .80;
+  const follow = reduceMotion || onStairs ? 1 : 1 - Math.exp(-elapsed * 12);
+  smoothProgress += delta * follow;
 
-  updateCamera(smoothProgress, t);
+  updateCamera(smoothProgress, t, elapsed);
   animateGate(smoothProgress);
   renderer.render(scene, camera);
   requestAnimationFrame(render);
@@ -337,7 +349,7 @@ async function bootScene() {
     });
 
     root.traverse(obj => {
-      if (/^(SlidingGate|GateReturn|GatePost|Carport|Stair|RailRear|RailFront|RailRight)/.test(obj.name)) obj.visible = false;
+      if (/^(SlidingGate|GateReturn|GatePost|Carport|Stair|RailRear|RailFront|RailRight|LandingPost|LandingHand|LandingMid)/.test(obj.name)) obj.visible = false;
       if (/^House(?:Accent|Window)?1$/.test(obj.name)) obj.visible = false;
       // The customer's two-storey railing replaces this section of the old
       // roadside fence. Remove only meshes occupying the same frontage.
@@ -348,6 +360,22 @@ async function bootScene() {
       }
     });
     customerModels = await installCustomerModels(scene, gltfLoader, isMobile);
+    // Place the roadside fence on the curb, with its posts matching gate height.
+    // Transform geometry in world space so posts, slats and panel frames agree.
+    root.updateMatrixWorld(true);
+    const fenceHeightScale = (1.8928 - .18) / (2.43 - .08);
+    const fenceAlignment = new THREE.Matrix4().set(
+      1,0,0,-.60,
+      0,fenceHeightScale,0,.18-.08*fenceHeightScale,
+      0,0,1,0,
+      0,0,0,1
+    );
+    root.traverse(obj => {
+      if (!obj.isMesh || !/^(Slat|Geo_|Leaf_|Waves_|Corner)/.test(obj.name)) return;
+      const localAlignment = obj.matrixWorld.clone().invert().multiply(fenceAlignment).multiply(obj.matrixWorld);
+      obj.geometry = obj.geometry.clone().applyMatrix4(localAlignment);
+    });
+    await installEnvironment(scene, root, gltfLoader, isMobile);
 
     targetProgress = getProgress();
     smoothProgress = targetProgress;

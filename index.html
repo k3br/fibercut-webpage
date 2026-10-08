@@ -158,7 +158,7 @@ footer { width: 100%; display: flex; justify-content: space-between; gap: 20px; 
 @media (max-width: 800px) {
   :root { --pad: 22px; }
   .site-header { height: 72px; }
-  .top-nav a:not(.nav-cta) { display: none; }
+  .top-nav a:not(.nav-cta):not(.nav-gallery) { display: none; }
   .top-nav .nav-cta { padding: 9px 11px; }
   .chapter-rail { display: none; }
   .story-section { min-height: 105vh; padding-top: 90px; }
@@ -209,7 +209,7 @@ body.is-loading { overflow: hidden; }
 .scene-preloader-line i { display: block; width: 45%; height: 100%; background: var(--acid); animation: preloadSweep .9s ease-in-out infinite; }
 @keyframes preloadSweep { 0% { transform: translateX(-110%); } 100% { transform: translateX(245%); } }
 
-</style>
+.site-credit { display:inline-flex; align-items:center; gap:6px; text-decoration:none; text-transform:none; font-size:8px; opacity:.65; } .site-credit img { width:62px; height:20px; object-fit:contain; }.top-nav .nav-gallery { border:1px dashed rgba(242,239,231,.38); padding:10px 14px; color:rgba(242,239,231,.72); } .top-nav .nav-gallery:hover, .top-nav .nav-gallery:focus-visible { border-color:rgba(242,239,231,.75); color:var(--paper); } @media(max-width:800px) { .top-nav .nav-gallery { padding:9px 10px; } .top-nav { gap:12px; } }/* More scroll distance for the fence turn, roof inspection and stair climb. */ #vzorci { min-height:180vh; } .reveal-section { min-height:480vh; } .contact-section { min-height:165vh; } </style>
 </head>
 <body class="is-loading">
   <div class="scene-preloader" id="scenePreloader" aria-label="Kontakt med nalaganjem">
@@ -239,7 +239,7 @@ body.is-loading { overflow: hidden; }
       <a href="#ograje">Ograje</a>
       <a href="#vrata">Drsna vrata</a>
       <a href="#stene">Stene</a>
-      <a class="nav-cta" href="#kontakt">Povpraševanje</a>
+      <a class="nav-gallery" href="gallery.html">Galerija</a><a class="nav-cta" href="#kontakt">Povpraševanje</a>
     </nav>
   </header>
 
@@ -253,8 +253,8 @@ body.is-loading { overflow: hidden; }
     <section class="story-section hero" id="intro" data-chapter="01" data-tone="light">
       <div class="copy copy-left hero-copy">
         <p class="eyebrow"><span></span> KOVINA / VZOREC / PROSTOR</p>
-        <h1>Dom z<br><em>značajem.</em><br>Do detajla.</h1>
-        <p class="lede">Prvi pogled pritegne. Detajli prepričajo. Ograje, drsna vrata in kovinski elementi po meri za dom, ki ga s ponosom pokažete.</p>
+        <h1>Premišljeno.<br><em>Natančno.</em><br>Izdelano za vas.</h1>
+        <p class="lede">Izdelujemo ograje, drsna vrata in kovinske elemente po meri. Da se podajo hiši, dobro služijo svojemu namenu in so lepo izdelani tudi tam, kjer se jih vidi od blizu.</p>
         <div class="actions">
           <a class="button button-solid" href="#ograje">Poiščite svoj slog <span>↘</span></a>
           <a class="text-link" href="#kontakt">Pogovorimo se o vašem domu <span>→</span></a>
@@ -268,8 +268,8 @@ body.is-loading { overflow: hidden; }
     <section class="story-section" id="ograje" data-chapter="02" data-tone="dark">
       <div class="copy copy-left narrow">
         <p class="eyebrow"><span></span> 02 — PERFORIRANE OGRAJE</p>
-        <h2>Več zasebnosti.<br>Več <em>značaja.</em></h2>
-        <p>Ustvarite kotiček, kjer ste lahko zares doma. Z vzorcem, barvo in odprtostjo ograje oblikujete ravno pravo razmerje med zasebnostjo, svetlobo in pogledom. Čiste linije poskrbijo, da vse deluje premišljeno.</p>
+        <h2>Koliko pogleda<br>želite <em>zase?</em></h2>
+        <p>Ob cesti običajno želimo več zasebnosti, na terasi pa ohraniti razgled. Gostoto vzorca, višino in barvo ograje prilagodimo prostoru. Tako ograja opravi svoje delo in se lepo poda objektu.</p>
         <div class="spec-row">
           <span>ANTRACIT</span><span>MAT ČRNA</span><span>TOPLI BRON</span>
         </div>
@@ -279,8 +279,8 @@ body.is-loading { overflow: hidden; }
     <section class="story-section" id="vzorci" data-chapter="03" data-tone="light">
       <div class="copy copy-right narrow">
         <p class="eyebrow"><span></span> 03 — OBLIKOVANO ZA VAS</p>
-        <h2>Vaš slog.<br>Do zadnjega <em>roba.</em></h2>
-        <p>Umirjena geometrija ali izrazit motiv? Vaša ograja lahko ujame značaj fasade in vaš občutek za lepo. Vzorec dobi smisel šele, ko se ujame s prostorom — zato štejejo tudi razmerja, robovi in zaključki.</p>
+        <h2>Vzorec naj<br><em>se poda hiši.</em></h2>
+        <p>Včasih so najboljša izbira preproste ravne linije. Drugje prostor prenese izrazitejši vzorec. Skupaj pogledamo fasado, okolico in vaše želje ter izberemo obliko, ki bo na objektu videti prav.</p>
         <a class="text-link" href="#kontakt">Pokažite nam, kaj vam je všeč <span>→</span></a>
       </div>
     </section>
@@ -288,8 +288,8 @@ body.is-loading { overflow: hidden; }
     <section class="story-section" id="vrata" data-chapter="04" data-tone="dark">
       <div class="copy copy-left narrow">
         <p class="eyebrow"><span></span> 04 — DRSNA VRATA</p>
-        <h2>Doma.<br>Z dobrim <em>občutkom.</em></h2>
-        <p>Vhod je prvi stik z vašim domom. Usklajena vrata in ograja ustvarijo mirno, povezano celoto. Z enakim ritmom vzorca in skrbno oblikovanimi detajli je lep prihod del vsakdana.</p>
+        <h2>Vrata in ograja.<br><em>Enaka linija.</em></h2>
+        <p>Drsna vrata uskladimo z ograjo, da vhod ne deluje kot naknadni dodatek. Pri zasnovi upoštevamo širino dovoza, prostor za odpiranje in položaj stebrov.</p>
         <div class="micro-note"><i></i> Enoten videz od ograje do vhoda</div>
       </div>
     </section>
@@ -297,16 +297,16 @@ body.is-loading { overflow: hidden; }
     <section class="story-section reveal-section" id="stene" data-chapter="05" data-tone="light">
       <div class="copy copy-right narrow">
         <p class="eyebrow"><span></span> 05 — KOVINA KOT ARHITEKTURA</p>
-        <h2>Celota očara.<br><em>Detajl prepriča.</em></h2>
-        <p>Ograja, nadstrešek in stopnice naj dopolnjujejo vaš dom. Usklajene linije povežejo zunanjost, natančno oblikovani spoji pa pokažejo skrb, ki stoji za celoto. Približajte se. Kakovost se vidi od blizu.</p>
+        <h2>Dobro narejeno.<br><em>Tudi od blizu.</em></h2>
+        <p>Pri nadstrešku ali stopnicah ne gledamo samo končne oblike. Pomembno je tudi, kako se nosilci srečajo, kje so pritrditve in kako so zaključeni robovi. To so detajli, ki jih pri izdelavi ne preskočimo.</p>
       </div>
     </section>
 
     <section class="story-section contact-section" id="kontakt" data-chapter="05" data-tone="dark">
       <div class="contact-card">
-        <p class="eyebrow"><span></span> VAŠ PROJEKT SE ZAČNE S POGOVOROM.</p>
-        <h2>Vaša ideja.<br><em>Naš naslednji izziv.</em></h2>
-        <p>Pošljite fotografijo prostora, približne mere ali primer, ki vas je navdušil. Ni treba imeti izdelanega načrta. Oglasite se Maticu in skupaj poiščimo obliko, ki bo pristajala vašemu domu.</p>
+        <p class="eyebrow"><span></span> POVEJTE NAM, KAJ POTREBUJETE.</p>
+        <h2>Pogovorimo se<br><em>o vašem projektu.</em></h2>
+        <p>Pošljite nam fotografijo, približne mere in nekaj besed o tem, kaj želite. Če imate primer, ki vam je všeč, ga priložite. Pri FiberCut bomo pogledali možnosti in se z vami dogovorili, kako naprej.</p>
         <div class="contact-grid">
           <div>
             <span class="contact-label">E-POŠTA</span>
@@ -321,19 +321,20 @@ body.is-loading { overflow: hidden; }
             <p>Gabrovka 74<br>1274 Gabrovka</p>
           </div>
         </div>
-        <a class="button button-solid big" href="mailto:fibercut.ograje@gmail.com?subject=Povpraševanje%20za%20projekt">Pošljite Maticu svojo idejo <span>↗</span></a>
+        <a class="button button-solid big" href="mailto:fibercut.ograje@gmail.com?subject=Povpraševanje%20za%20projekt">Pošljite povpraševanje <span>↗</span></a>
+        <p>Nekaj naših izdelkov si lahko ogledate v galeriji.</p><a class="text-link" href="gallery.html">Oglejte si galerijo →</a>
       </div>
       <footer>
         <span>FIBERCUT / MATIC PODLOGAR S.P.</span>
         <span>KOVINA PO MERI / SKRB ZA VSAK DETAJL</span>
-      </footer>
+      <a class="site-credit" href="https://www.kodica.si" target="_blank" rel="noopener noreferrer">crafted by <img src="assets/kodica-logo.png" alt="Kodica" width="100" height="32" loading="lazy"></a></footer>
     </section>
   </main>
 
   <aside class="detail-caption detail-carport">
     <p class="eyebrow">CNC RAZREZ / DETAJL NADSTREŠKA</p>
-    <h2>Od blizu se vidi razlika.</h2>
-    <p>Natančen CNC razrez oblikuje robove in odprtine za premišljeno prileganje. Prav tu, kjer se srečajo nosilci strehe, dober načrt postane dovršen detajl. Natančnost, ki poveže celoto.</p>
+    <h2>Spoj mora biti točen.</h2>
+    <p>CNC razrez nam omogoča natančno izdelavo odprtin in robov. Pri takem spoju mora vsak kos priti na svoje mesto. Zato se natančnost začne pri načrtu, še preden razrežemo material.</p>
   </aside>
   <div class="webgl-fallback" id="webglFallback" hidden>
     <div class="fallback-pattern"></div>
