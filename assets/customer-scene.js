@@ -46,6 +46,28 @@ export async function installCustomerModels(scene, loader, isMobile) {
     mesh.receiveShadow = true; mesh.castShadow = true; parent.add(mesh); return mesh;
   };
   const concrete = new THREE.MeshStandardMaterial({color: 0xb5b5ae, roughness: .92});
+  // The fixed railing was mounted on a retaining wall absent from the CAD export.
+  // Derive its alignment from the end mounting plates; keep it behind the
+  // sliding leaf so the driveway and the roller hardware remain clear.
+  gate.updateMatrixWorld(true);
+  const mountingCentre = name => gate.worldToLocal(
+    new THREE.Box3().setFromObject(gate.getObjectByName(name)).getCenter(new THREE.Vector3())
+  );
+  const wallStart = mountingCentre('CAD_part_215');
+  const wallEnd = mountingCentre('CAD_part_217');
+  const wallDirection = wallEnd.clone().sub(wallStart);
+  const wallTop = Math.min(wallStart.y, wallEnd.y) - .0025;
+  const wallBottom = -.03;
+  const wallCentre = wallStart.clone().add(wallEnd).multiplyScalar(.5);
+  const retainingWall = box(gate, 'CustomerGateRetainingWall',
+    [Math.hypot(wallDirection.x, wallDirection.z) + .24, wallTop - wallBottom, .22],
+    [wallCentre.x, (wallTop + wallBottom) / 2, wallCentre.z], concrete);
+  retainingWall.rotation.y = -Math.atan2(wallDirection.z, wallDirection.x);
+
+  // Support the complete landing below the existing metal floor, then close
+  // the missing final strip between the last CAD tile and the end frame.
+  box(stairs, 'CustomerStairsLandingSupport', [1.982, .12, .854], [1.657, 2.42, .1], metal);
+  box(stairs, 'CustomerStairsLandingInfill', [.382, .03, .8], [2.457, 2.495, .073], metal);
   box(fence, 'CustomerFenceBuilding', [11.125, 5, 3.5], [0, 2.5, -2.30], fenceStructure?.material || concrete);
   const glass = new THREE.MeshStandardMaterial({color: 0x465e69, metalness: .65, roughness: .22});
   for (const y of [1.22, 3.85]) {
