@@ -350,6 +350,7 @@ async function bootScene() {
 
     root.traverse(obj => {
       if (/^(SlidingGate|GateReturn|GatePost|Carport|Stair|RailRear|RailFront|RailRight|LandingPost|LandingHand|LandingMid)/.test(obj.name)) obj.visible = false;
+      if (/^Car(?:Body|Cabin|Wheel\d+)$/.test(obj.name)) obj.visible = false;
       if (/^House(?:Accent|Window)?1$/.test(obj.name)) obj.visible = false;
       // The customer's two-storey railing replaces this section of the old
       // roadside fence. Remove only meshes occupying the same frontage.
@@ -363,6 +364,23 @@ async function bootScene() {
     // Place the roadside fence on the curb, with its posts matching gate height.
     // Transform geometry in world space so posts, slats and panel frames agree.
     root.updateMatrixWorld(true);
+    // Pair the ten narrow strips into five strips of twice the face width.
+    // This preserves the open rhythm instead of overlapping adjacent strips.
+    root.traverse(obj => {
+      if (!obj.isMesh || !/^Slat_/.test(obj.name)) return;
+      const row = Number(obj.name.split('_').at(-1));
+      if (row % 2) { obj.visible = false; return; }
+      const bounds = new THREE.Box3().setFromObject(obj);
+      const centreY = (bounds.min.y + bounds.max.y) / 2;
+      const broaden = new THREE.Matrix4().set(
+        1,0,0,0,
+        0,2,0,-centreY + .095,
+        0,0,1,0,
+        0,0,0,1
+      );
+      const localBroaden = obj.matrixWorld.clone().invert().multiply(broaden).multiply(obj.matrixWorld);
+      obj.geometry = obj.geometry.clone().applyMatrix4(localBroaden);
+    });
     const fenceHeightScale = (1.8928 - .18) / (2.43 - .08);
     const fenceAlignment = new THREE.Matrix4().set(
       1,0,0,-.60,

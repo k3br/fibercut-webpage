@@ -11,6 +11,8 @@ Upload these files and folders to the same GitHub Pages folder:
   models/web/4_nadstresek.optimized.glb
   models/web/3_stopnice.optimized.glb
   models/web/2_ograja.optimized.glb
+  models/web/coffee-table.glb
+  models/web/dining-table.glb
 
 All PBR textures are embedded inside fibercut-scene.glb.
 No MP4/video background is used. The camera moves through the actual 3D scene.

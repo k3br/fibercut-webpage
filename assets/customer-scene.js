@@ -2,11 +2,13 @@ import * as THREE from 'three';
 
 // Positions are in metres. Preserve the original CAD groups for animation.
 export async function installCustomerModels(scene, loader, isMobile) {
-  const [gateAsset, carportAsset, stairAsset, fenceAsset] = await Promise.all([
+  const [gateAsset, carportAsset, stairAsset, fenceAsset, coffeeAsset, diningAsset] = await Promise.all([
     loader.loadAsync('models/web/customer-gate.glb'),
     loader.loadAsync('models/web/4_nadstresek.optimized.glb'),
     loader.loadAsync('models/web/3_stopnice.optimized.glb'),
-    loader.loadAsync('models/web/2_ograja.optimized.glb')
+    loader.loadAsync('models/web/2_ograja.optimized.glb'),
+    loader.loadAsync('models/web/coffee-table.glb'),
+    loader.loadAsync('models/web/dining-table.glb')
   ]);
   const metal = new THREE.MeshStandardMaterial({color: 0x555e66, metalness: .82, roughness: .34, side: THREE.DoubleSide});
   const renderModel = (model, name) => {
@@ -76,6 +78,22 @@ export async function installCustomerModels(scene, loader, isMobile) {
     }
   }
   box(carport, 'CustomerCarportPad', [6.7, .06, 5.3], [0, .01, 0], concrete);
+  // Keep the furniture's own oak, steel and ceramic PBR materials.
+  const installFurniture = (asset, name, position) => {
+    const model = asset.scene;
+    model.name = name;
+    model.position.set(...position);
+    model.rotation.y = -.278;
+    model.traverse(obj => {
+      if (!obj.isMesh) return;
+      obj.castShadow = !isMobile;
+      obj.receiveShadow = true;
+    });
+    carport.add(model);
+    return model;
+  };
+  const coffeeTable = installFurniture(coffeeAsset, 'CustomerCoffeeTable', [-1.2, .04, .72]);
+  const diningTable = installFurniture(diningAsset, 'CustomerDiningTable', [.95, .04, -.40]);
   // Match the CAD roof frame (5.5 × 3.5 m), including its rotation in plan.
   const roof = box(carport, 'CustomerCarportRoofCover', [5.5, .045, 3.5], [-.0104, 2.7875, .031], new THREE.MeshStandardMaterial({color: 0x82939a, metalness: .5, roughness: .35}));
   roof.rotation.y = -Math.atan2(1.508962, 5.289146);
@@ -86,7 +104,7 @@ export async function installCustomerModels(scene, loader, isMobile) {
   const lamp = new THREE.PointLight(0xffdfb0, 3, 5, 2);
   lamp.position.set(-2.85, 4.1, -99.85); scene.add(lamp);
 
-  return {gate, movingGate, carport, stairs, door, fence,
+  return {gate, movingGate, carport, stairs, door, fence, coffeeTable, diningTable,
     animate(progress) {
       const open = THREE.MathUtils.smoothstep(progress, .48, .60);
       const travel = open * 5.9;
@@ -110,9 +128,12 @@ export const journey = [
   {p: .705, position: [-2.0,2.15,-85.65], target: [-1.02,2.61,-86.88], fov: 38, detail: 'carport-roof-joint'},
   {p: .725, position: [-2.0,2.15,-85.65], target: [-1.02,2.61,-86.88], fov: 38, detail: 'carport-roof-joint'},
   {p: .755, position: [-2.2,1.68,-89],   target: [1.2,1.7,-89]},
-  // Walk up the tread centreline, keeping the outer railing in view.
-  {p: .80,  position: [-3.525,1.68,-95.25],target: [-3.18,2.75,-98.3]},
-  {p: .845, position: [-3.525,2.83,-96.9], target: [-3.18,3.05,-99.1]},
+  // Align with the stair centreline on the ground, showing the first tread
+  // before raising the camera. First tread begins at z=-95.314, y=.211.
+  {p: .78,  position: [-3.525,1.68,-93.6],target: [-3.525,.8,-95.8]},
+  {p: .80,  position: [-3.525,1.68,-94.85],target: [-3.525,1.0,-96.4]},
+  {p: .815, position: [-3.525,1.86,-95.45],target: [-3.525,2.15,-97.1]},
+  {p: .845, position: [-3.525,2.80,-96.62],target: [-3.18,3.05,-99.1]},
   {p: .89,  position: [-3.525,4.19,-98.75],target: [-3.18,3.55,-100.35]},
   {p: .96,  position: [-3.525,4.19,-100],target: [-4.02,3.55,-100.55]},
   {p: 1,    position: [-3.525,4.19,-100],target: [-4.02,3.55,-100.55]}
