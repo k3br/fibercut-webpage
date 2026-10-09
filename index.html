@@ -6,6 +6,7 @@
   <meta name="theme-color" content="#0b0c0e" />
   <meta name="description" content="FiberCut — sodobne kovinske ograje, perforirani aluminijasti paneli, drsna vrata in dekorativne stene po meri." />
   <title>FiberCut — ograje, ki postanejo arhitektura</title>
+  <link rel="preload" href="assets/fibercut-logo-light.svg" as="image" type="image/svg+xml" />
     <style>
 :root {
   --ink: #101114;
@@ -197,6 +198,7 @@ body.is-loading { overflow: hidden; }
 .scene-preloader.is-ready { opacity: 0; visibility: hidden; pointer-events: none; }
 .scene-preloader-inner { width: min(520px, 100%); margin: auto; }
 .loading-contact { margin-bottom: 38px; }
+.loading-logo { display: block; width: min(320px, 100%); height: auto; margin-bottom: 28px; }
 .loading-contact h2 { font-size: clamp(30px, 5vw, 48px); margin: 16px 0; }
 .loading-contact p { font-size: 16px; line-height: 1.6; color: var(--paper); }
 .loading-contact-links { display: grid; gap: 10px; margin: 24px 0; }
@@ -218,7 +220,8 @@ body.is-loading { overflow: hidden; }
   <div class="scene-preloader" id="scenePreloader" aria-label="Kontakt med nalaganjem">
     <div class="scene-preloader-inner">
       <div class="loading-contact">
-        <p class="eyebrow">FIBERCUT / KOVINA PO MERI</p>
+        <img class="loading-logo" src="assets/fibercut-logo-light.svg" alt="FiberCut" width="672" height="110" fetchpriority="high" />
+        <p class="eyebrow">KOVINA PO MERI</p>
         <h2>Nalaganje …</h2>
         <div class="loading-contact-links">
           <a href="tel:+38651744481">+386 51 744 481</a>
