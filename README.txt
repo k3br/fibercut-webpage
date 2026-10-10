@@ -6,6 +6,7 @@ Upload these files and folders to the same GitHub Pages folder:
   assets/customer-scene.js
   assets/environment.js
   assets/environment/
+  assets/environment/tree-natural.glb
   fibercut-scene.glb
   models/web/customer-gate.glb
   models/web/4_nadstresek.optimized.glb

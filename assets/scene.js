@@ -160,8 +160,13 @@ function getProgress() {
 }
 
 function updateChapter(p) {
-  const chapter = p < .18 ? '01' : p < .38 ? '02' : p < .58 ? '03' : p < .78 ? '04' : '05';
-  chapterNumber.textContent = chapter;
+  const centre = window.innerHeight / 2;
+  const chapters = [...document.querySelectorAll('#story [data-chapter]')];
+  const active = chapters.find(section => {
+    const bounds = section.getBoundingClientRect();
+    return bounds.top <= centre && bounds.bottom > centre;
+  });
+  chapterNumber.textContent = active?.dataset.chapter || chapters.at(-1).dataset.chapter;
   progressBar.style.height = `${Math.round(p * 100)}%`;
 }
 

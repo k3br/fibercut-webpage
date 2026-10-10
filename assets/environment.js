@@ -3,9 +3,10 @@ import * as THREE from 'three';
 // Two shared tree assets; every repeated part is rendered with instancing.
 export async function installEnvironment(scene, root, loader, isMobile) {
   const textures = new THREE.TextureLoader();
-  const [oak, pine, sky, grass] = await Promise.all([
+  const [oak, pine, naturalTree, sky, grass] = await Promise.all([
     loader.loadAsync('assets/environment/tree-oak.glb'),
     loader.loadAsync('assets/environment/tree-pine.glb'),
+    loader.loadAsync('assets/environment/tree-natural.glb'),
     textures.loadAsync('assets/environment/sky.webp'),
     textures.loadAsync('assets/environment/grass.webp')
   ]);
@@ -35,13 +36,34 @@ export async function installEnvironment(scene, root, loader, isMobile) {
     [-8,-43,5.5], [11,-51,6.3], [-8,-60,5], [11,-69,5.7],
     [-8,-82,6.1], [11,-86,5.4], [9,-99,5.9], [-9,-105,5.3]
   ];
+  // The nearest trees establish the opening scene: use a rounded branching
+  // broadleaf silhouette rather than the old stacked geometric crowns.
+  const naturalBounds = new THREE.Box3().setFromObject(naturalTree.scene);
+  const naturalCentre = naturalBounds.getCenter(new THREE.Vector3());
+  const naturalHeight = naturalBounds.max.y - naturalBounds.min.y;
+  for (const [index, [x,z,height]] of sites.slice(0,2).entries()) {
+    const placement = new THREE.Group();
+    placement.name = `OpeningNaturalTree_${index}`;
+    const tree = naturalTree.scene.clone(true);
+    tree.position.set(-naturalCentre.x,-naturalBounds.min.y,-naturalCentre.z);
+    tree.traverse(obj => {
+      if (!obj.isMesh) return;
+      obj.castShadow = !isMobile;
+      obj.receiveShadow = true;
+    });
+    placement.add(tree);
+    placement.scale.setScalar(height / naturalHeight);
+    placement.rotation.y = index * 1.7;
+    placement.position.set(x,.02,z);
+    scene.add(placement);
+  }
   for (const [type, asset] of [oak,pine].entries()) {
     const model = asset.scene;
     model.updateMatrixWorld(true);
     const bounds = new THREE.Box3().setFromObject(model);
     const centre = bounds.getCenter(new THREE.Vector3());
     const height = bounds.max.y-bounds.min.y;
-    const placements = sites.filter((_,i)=>i%2===type);
+    const placements = sites.filter((_,i)=>i>=2 && i%2===type);
     model.traverse(o => {
       if (!o.isMesh) return;
       const geometry = o.geometry.clone().applyMatrix4(o.matrixWorld);
