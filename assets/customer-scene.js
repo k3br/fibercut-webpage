@@ -71,6 +71,16 @@ export async function installCustomerModels(scene, loader, isMobile) {
   box(stairs, 'CustomerStairsLandingSupport', [1.982, .12, .854], [1.657, 2.42, .1], metal);
   box(stairs, 'CustomerStairsLandingInfill', [.382, .03, .8], [2.457, 2.495, .073], metal);
   box(fence, 'CustomerFenceBuilding', [11.125, 5, 3.5], [0, 2.5, -2.30], fenceStructure?.material || concrete);
+  // Both CAD railings stand at z=.51, a metre in front of the facade.
+  // Connect their mounting feet to the building with continuous balcony slabs.
+  const balconyConcrete = fenceStructure?.material || concrete;
+  box(fence, 'CustomerUpperBalconySlab', [9.5, .22, 1.18], [0, 2.67, -.01], balconyConcrete);
+  box(fence, 'CustomerLowerBalconySlab', [9.5, .12, 1.18], [0, -.04, -.01], balconyConcrete);
+  for (const y of [.02, 2.78]) {
+    for (const x of [-4.512, -3.008, -1.504, 0, 1.504, 3.008, 4.512]) {
+      box(fence, `BalconyPostBase_${x}_${y}`, [.12, .008, .12], [x, y + .004, .51], metal);
+    }
+  }
   const glass = new THREE.MeshStandardMaterial({color: 0x465e69, metalness: .65, roughness: .22});
   for (const y of [1.22, 3.85]) {
     for (const x of [-3.2, 0, 3.2]) {
