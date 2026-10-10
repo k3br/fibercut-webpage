@@ -139,24 +139,34 @@ export const journey = [
   {p: .705, position: [-2.0,2.15,-85.65], target: [-1.02,2.61,-86.88], zoom: 1},
   {p: .725, position: [-2.05,2.12,-86.10],target: [-.92,2.61,-87.10], zoom: 1},
   {p: .755, position: [-2.2,1.68,-89],   target: [1.2,1.7,-89]},
-  // Walk 25.5 cm left of centre, inside the railing. Aim 20 degrees right
-  // across the treads so both the stair width and opposite railing are visible.
+  // Walk on the left half, towards the house, with the original viewing angles.
   // First tread begins at z=-95.314, y=.211; climb still starts at its foot.
-  {p: .78,  position: [-3.78,1.68,-93.6],target: [-2.979,.8,-95.8]},
-  {p: .80,  position: [-3.78,1.68,-94.85],target: [-3.216,1.0,-96.4]},
-  {p: .815, position: [-3.78,1.86,-95.45],target: [-3.179,2.15,-97.1]},
-  {p: .845, position: [-3.78,2.80,-96.62],target: [-2.877,3.05,-99.1]},
-  {p: .89,  position: [-3.78,4.19,-98.75],target: [-3.198,3.55,-100.35]},
-  {p: 1,    position: [-3.78,4.19,-100],target: [-4.02,3.55,-100.55]}
+  {p: .78,  position: [-3.78,1.68,-93.6],target: [-3.78,.8,-95.8]},
+  {p: .80,  position: [-3.78,1.68,-94.85],target: [-3.78,1.0,-96.4]},
+  {p: .815, position: [-3.78,1.86,-95.45],target: [-3.78,2.15,-97.1]},
+  {p: .845, position: [-3.78,2.80,-96.62],target: [-3.435,3.05,-99.1]},
+  {p: .89,  position: [-3.78,4.19,-98.75],target: [-3.435,3.55,-100.35]},
+  {p: 1,    position: [-3.78,4.19,-100],target: [-4.275,3.55,-100.55]}
 ];
 
-// Monotone cubic Hermite interpolation keeps the velocity continuous through
-// each waypoint without overshooting the stair centreline or gate opening.
+// Interpolate viewing angles rather than nearby look-at points: a short target
+// distance must not amplify a small translation into a sudden camera turn.
+let previousYaw = 0;
+const orientations = journey.map((frame,i) => {
+  const [x,y,z] = frame.target.map((value,axis) => value-frame.position[axis]);
+  let yaw = Math.atan2(x,-z);
+  if (i) yaw = previousYaw + Math.atan2(Math.sin(yaw-previousYaw),Math.cos(yaw-previousYaw));
+  previousYaw = yaw;
+  return {yaw, pitch: Math.atan2(y,Math.hypot(x,z))};
+});
+// Quintic Hermite curves share velocity and zero acceleration at waypoints.
+// The old cubic only matched velocity, leaving acceleration jumps at joins.
 const channels = [
   ...['position', 'target'].flatMap(key => [0,1,2].map(axis => ({key,axis}))),
-  {key: 'zoom', axis: null}
+  ...['zoom','yaw','pitch'].map(key => ({key,axis:null}))
 ].map(({key,axis}) => {
-  const values = journey.map(frame => axis === null ? (frame[key] ?? 0) : frame[key][axis]);
+  const values = journey.map((frame,i) => axis !== null ? frame[key][axis]
+    : key === 'zoom' ? (frame.zoom ?? 0) : orientations[i][key]);
   const intervals = journey.slice(1).map((frame,i) => frame.p - journey[i].p);
   const slopes = intervals.map((h,i) => (values[i+1] - values[i]) / h);
   const tangents = values.map((_,i) => {
@@ -176,12 +186,12 @@ export function sampleJourney(progress, result = {position: [0,0,0], target: [0,
   let index = journey.findIndex((frame,i) => i < journey.length - 1 && p <= journey[i+1].p);
   if (index < 0) index = journey.length - 2;
   const a = journey[index], b = journey[index+1], h = b.p - a.p;
-  const t = (p - a.p) / h, t2 = t*t, t3 = t2*t;
+  const t = (p - a.p) / h, t2 = t*t, t3 = t2*t, t4 = t3*t, t5 = t4*t;
   for (const {key, axis, values, tangents} of channels) {
-    const value = (2*t3 - 3*t2 + 1) * values[index]
-      + (t3 - 2*t2 + t) * h * tangents[index]
-      + (-2*t3 + 3*t2) * values[index+1]
-      + (t3 - t2) * h * tangents[index+1];
+    const value = (1 - 10*t3 + 15*t4 - 6*t5) * values[index]
+      + (t - 6*t3 + 8*t4 - 3*t5) * h * tangents[index]
+      + (10*t3 - 15*t4 + 6*t5) * values[index+1]
+      + (-4*t3 + 7*t4 - 3*t5) * h * tangents[index+1];
     if (axis === null) result[key] = value;
     else result[key][axis] = value;
   }

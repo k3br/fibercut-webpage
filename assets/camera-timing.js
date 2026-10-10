@@ -34,3 +34,19 @@ export function scrollToJourney(scroll) {
   }
   return (low + high) / 2;
 }
+
+// Exact critically damped spring. Preserve velocity when new scroll input
+// arrives, instead of restarting an exponential lerp on every wheel/touch step.
+export function advanceScroll(state, target, seconds) {
+  const frequency = 18;
+  const offset = state.position-target;
+  const impulse = state.velocity+frequency*offset;
+  const decay = Math.exp(-frequency*seconds);
+  state.position = target+(offset+impulse*seconds)*decay;
+  state.velocity = (state.velocity-frequency*impulse*seconds)*decay;
+  if (state.position < 0 || state.position > 1) {
+    state.position = Math.max(0,Math.min(1,state.position));
+    state.velocity = 0;
+  }
+  return state.position;
+}

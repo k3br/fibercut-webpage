@@ -4,7 +4,7 @@ import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { installCustomerModels, sampleJourney } from './customer-scene.js';
 import { installEnvironment } from './environment.js';
-import { scrollToJourney } from './camera-timing.js';
+import { scrollToJourney, advanceScroll } from './camera-timing.js';
 
 const canvas = document.querySelector('#scene');
 const fallback = document.querySelector('#webglFallback');
@@ -141,18 +141,20 @@ let root = null;
 let customerModels;
 let targetProgress = 0;
 let smoothProgress = 0;
+const scrollSpring = {position:0,velocity:0};
+let chapterDirty = true;
+const chapters = [...document.querySelectorAll('#story [data-chapter]')];
 let pointerX = 0;
 let pointerY = 0;
 let started = false;
 
 function getProgress() {
   const max = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
-  return scrollToJourney(THREE.MathUtils.clamp(window.scrollY / max, 0, 1));
+  return THREE.MathUtils.clamp(window.scrollY / max, 0, 1);
 }
 
 function updateChapter(p) {
   const centre = window.innerHeight / 2;
-  const chapters = [...document.querySelectorAll('#story [data-chapter]')];
   const active = chapters.find(section => {
     const bounds = section.getBoundingClientRect();
     return bounds.top <= centre && bounds.bottom > centre;
@@ -166,8 +168,9 @@ function animateGate(p) {
 }
 
 const cameraFrame = {position: [0,0,0], target: [0,0,0]};
+const cameraAngles = new THREE.Euler(0,0,0,'YXZ');
 function updateCamera(p) {
-  const {position, target, zoom} = sampleJourney(p, cameraFrame);
+  const {position, yaw, pitch, zoom} = sampleJourney(p, cameraFrame);
   const px = reduceMotion || isMobile ? 0 : pointerX * .04;
   const py = reduceMotion || isMobile ? 0 : pointerY * .02;
   camera.position.set(position[0] + px, position[1] - py, position[2]);
@@ -178,14 +181,14 @@ function updateCamera(p) {
     camera.fov = fov;
     camera.updateProjectionMatrix();
   }
-  camera.lookAt(target[0] + px, target[1] - py, target[2]);
+  cameraAngles.set(pitch,-yaw,0,'YXZ');
+  camera.quaternion.setFromEuler(cameraAngles);
   sun.position.set(-12, 18, camera.position.z + 10);
   sun.target.position.set(0, 0, camera.position.z - 7);
 }
 
 window.addEventListener('scroll', () => {
-  targetProgress = getProgress();
-  updateChapter(targetProgress);
+  chapterDirty = true;
 }, { passive: true });
 
 if (!isMobile) {
@@ -198,12 +201,17 @@ if (!isMobile) {
 let lastFrame = 0;
 function render(t = 0) {
   if (!started) return;
-  const delta = targetProgress - smoothProgress;
+  if (chapterDirty) targetProgress = getProgress();
   const elapsed = Math.min(.1, (t - lastFrame) / 1000 || 1 / 60);
   lastFrame = t;
-  // Use the same frame-rate-independent smoothing for the entire journey.
-  const follow = reduceMotion ? 1 : 1 - Math.exp(-elapsed * 14);
-  smoothProgress += delta * follow;
+  if (reduceMotion) {
+    scrollSpring.position = targetProgress;
+    scrollSpring.velocity = 0;
+  } else advanceScroll(scrollSpring,targetProgress,elapsed);
+  // Smooth the input first, then apply turn timing. Fast swipes must still
+  // traverse the slow turn instead of interpolating straight past it.
+  smoothProgress = scrollToJourney(scrollSpring.position);
+  if (chapterDirty) { updateChapter(targetProgress); chapterDirty = false; }
 
   updateCamera(smoothProgress);
   animateGate(smoothProgress);
@@ -214,12 +222,11 @@ function render(t = 0) {
 function resize() {
   const mobile = window.innerWidth <= 800;
   camera.aspect = window.innerWidth / window.innerHeight;
-  camera.fov = mobile ? 64 : 55;
   camera.updateProjectionMatrix();
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, mobile ? 1.75 : 2.0));
   renderer.setSize(window.innerWidth, window.innerHeight, false);
   targetProgress = getProgress();
-  updateChapter(targetProgress);
+  chapterDirty = true;
 }
 window.addEventListener('resize', resize, { passive: true });
 
@@ -396,7 +403,9 @@ async function bootScene() {
     await installEnvironment(scene, root, gltfLoader, isMobile);
 
     targetProgress = getProgress();
-    smoothProgress = targetProgress;
+    scrollSpring.position = targetProgress;
+    scrollSpring.velocity = 0;
+    smoothProgress = scrollToJourney(targetProgress);
     updateChapter(targetProgress);
     updateCamera(smoothProgress);
     animateGate(smoothProgress);
