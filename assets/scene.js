@@ -4,6 +4,7 @@ import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { installCustomerModels, sampleJourney } from './customer-scene.js';
 import { installEnvironment } from './environment.js';
+import { scrollToJourney } from './camera-timing.js';
 
 const canvas = document.querySelector('#scene');
 const fallback = document.querySelector('#webglFallback');
@@ -146,7 +147,7 @@ let started = false;
 
 function getProgress() {
   const max = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
-  return THREE.MathUtils.clamp(window.scrollY / max, 0, 1);
+  return scrollToJourney(THREE.MathUtils.clamp(window.scrollY / max, 0, 1));
 }
 
 function updateChapter(p) {
