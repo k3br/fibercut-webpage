@@ -6,6 +6,7 @@
   <meta name="theme-color" content="#0b0c0e" />
   <meta name="description" content="FiberCut — sodobne kovinske ograje, perforirani aluminijasti paneli, drsna vrata in dekorativne stene po meri." />
   <title>FiberCut — ograje, ki postanejo arhitektura</title>
+  <link rel="stylesheet" href="assets/vendor/lenis/lenis.css" />
   <link rel="preload" href="assets/fibercut-logo-light.svg" as="image" type="image/svg+xml" />
     <style>
 :root {
@@ -18,7 +19,7 @@
 }
 
 * { box-sizing: border-box; }
-html { scroll-behavior: smooth; background: var(--ink); }
+html { scroll-behavior: auto; background: var(--ink); }
 body {
   margin: 0;
   background: #b8b8b2;
@@ -48,7 +49,7 @@ a { color: inherit; }
 .noise {
   position: fixed; inset: -50%; z-index: 2; pointer-events: none; opacity: .055;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.86' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.8'/%3E%3C/svg%3E");
-  animation: grain .22s steps(2) infinite;
+  /* Static grain avoids periodic compositing work over the animated canvas. */
 }
 .vignette {
   position: fixed; inset: 0; z-index: 1; pointer-events: none;
@@ -137,7 +138,7 @@ h1 em, h2 em { font-family: Georgia, "Times New Roman", serif; font-weight: 400;
 
 .contact-section { min-height: 118vh; align-items: flex-end; padding: 18vh var(--pad) 32px; flex-wrap: wrap; }
 .reveal-section { min-height: 110vh; }
-.contact-card { margin-left: auto; width: min(800px, 65%); padding: clamp(30px, 5vw, 72px); background: rgba(10,11,13,.42); border: 1px solid rgba(255,255,255,.10); backdrop-filter: blur(10px); }
+.contact-card { margin-left: auto; width: min(800px, 65%); padding: clamp(30px, 5vw, 72px); background: rgba(10,11,13,.65); border: 1px solid rgba(255,255,255,.10); }
 .contact-card h2 { max-width: 900px; }
 .contact-grid { margin-top: 48px; padding-top: 24px; border-top: 1px solid rgba(255,255,255,.18); display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
 .contact-grid > div { display: grid; align-content: start; gap: 9px; }
@@ -157,11 +158,11 @@ footer { width: 100%; display: flex; justify-content: space-between; gap: 20px; 
   .top-nav a:not(.nav-cta):not(.nav-gallery) { display: none; }
   .top-nav .nav-cta { padding: 9px 11px; }
   .chapter-rail { display: none; }
-  .story-section { min-height: 105vh; padding-top: 90px; }
-  .hero { min-height: 115vh; }
-  .reveal-section { min-height: 105vh; }
-  .contact-section { min-height: 128vh; padding-top: 24vh; }
-  .contact-card { width: 100%; margin-left: 0; background: rgba(10,11,13,.34); backdrop-filter: blur(8px); }
+  .story-section { min-height: 105svh; padding-top: 90px; }
+  .hero { min-height: 115svh; }
+  .reveal-section { min-height: 105svh; }
+  .contact-section { min-height: 128svh; padding-top: 24svh; }
+  .contact-card { width: 100%; margin-left: 0; background: rgba(10,11,13,.65); }
   .copy, .copy-right { width: 100%; margin: 0; }
   h1 { font-size: clamp(36px, 12vw, 64px); }
   .contact-card h2 { font-size: clamp(40px, 12vw, 60px); }

@@ -4,7 +4,9 @@ import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { installCustomerModels, sampleJourney } from './customer-scene.js';
 import { installEnvironment } from './environment.js';
-import { scrollToJourney, advanceScroll } from './camera-timing.js';
+import { scrollToJourney } from './camera-timing.js';
+import { batchStaticStructures } from './optimize-scene.js';
+import Lenis from './vendor/lenis/lenis.js';
 
 const canvas = document.querySelector('#scene');
 const fallback = document.querySelector('#webglFallback');
@@ -30,7 +32,7 @@ try {
   throw err;
 }
 
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, isMobile ? 1.75 : 2.0));
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, isMobile ? 1.5 : 2.0));
 renderer.setSize(window.innerWidth, window.innerHeight, false);
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -141,7 +143,7 @@ let root = null;
 let customerModels;
 let targetProgress = 0;
 let smoothProgress = 0;
-const scrollSpring = {position:0,velocity:0};
+let smoothScroll;
 let chapterDirty = true;
 const chapters = [...document.querySelectorAll('#story [data-chapter]')];
 let pointerX = 0;
@@ -149,6 +151,7 @@ let pointerY = 0;
 let started = false;
 
 function getProgress() {
+  if (smoothScroll) return THREE.MathUtils.clamp(smoothScroll.scroll / Math.max(1,smoothScroll.limit),0,1);
   const max = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
   return THREE.MathUtils.clamp(window.scrollY / max, 0, 1);
 }
@@ -198,19 +201,13 @@ if (!isMobile) {
   }, { passive: true });
 }
 
-let lastFrame = 0;
 function render(t = 0) {
   if (!started) return;
-  if (chapterDirty) targetProgress = getProgress();
-  const elapsed = Math.min(.1, (t - lastFrame) / 1000 || 1 / 60);
-  lastFrame = t;
-  if (reduceMotion) {
-    scrollSpring.position = targetProgress;
-    scrollSpring.velocity = 0;
-  } else advanceScroll(scrollSpring,targetProgress,elapsed);
-  // Smooth the input first, then apply turn timing. Fast swipes must still
-  // traverse the slow turn instead of interpolating straight past it.
-  smoothProgress = scrollToJourney(scrollSpring.position);
+  // Advance the page and sample the camera in the same frame. There is one
+  // smoothing layer, so the DOM and WebGL cannot drift behind one another.
+  smoothScroll?.raf(t);
+  targetProgress = getProgress();
+  smoothProgress = scrollToJourney(targetProgress);
   if (chapterDirty) { updateChapter(targetProgress); chapterDirty = false; }
 
   updateCamera(smoothProgress);
@@ -223,12 +220,24 @@ function resize() {
   const mobile = window.innerWidth <= 800;
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, mobile ? 1.75 : 2.0));
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, mobile ? 1.5 : 2.0));
   renderer.setSize(window.innerWidth, window.innerHeight, false);
   targetProgress = getProgress();
   chapterDirty = true;
 }
-window.addEventListener('resize', resize, { passive: true });
+let resizeTimer;
+let renderedWidth = window.innerWidth;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeTimer);
+  if (window.innerWidth !== renderedWidth) {
+    renderedWidth = window.innerWidth;
+    resize();
+  } else {
+    // Mobile browser bars animate height while scrolling. Reallocating the
+    // drawing buffer at every intermediate height stalls the GPU repeatedly.
+    resizeTimer = setTimeout(resize,150);
+  }
+}, { passive: true });
 
 const manager = new THREE.LoadingManager();
 manager.onProgress = (_url, loaded, total) => {
@@ -401,10 +410,9 @@ async function bootScene() {
       obj.geometry = obj.geometry.clone().applyMatrix4(localAlignment);
     });
     await installEnvironment(scene, root, gltfLoader, isMobile);
+    batchStaticStructures(scene,[root,customerModels.carport,customerModels.stairs,customerModels.fence]);
 
     targetProgress = getProgress();
-    scrollSpring.position = targetProgress;
-    scrollSpring.velocity = 0;
     smoothProgress = scrollToJourney(targetProgress);
     updateChapter(targetProgress);
     updateCamera(smoothProgress);
@@ -436,6 +444,8 @@ async function bootScene() {
       setTimeout(() => loaderEl.remove(), 450);
     }
 
+    smoothScroll = new Lenis({autoRaf:false,smoothWheel:true,syncTouch:true,lerp:.085,syncTouchLerp:.085,anchors:true});
+    smoothScroll.on('scroll',()=>{chapterDirty=true;});
     started = true;
     requestAnimationFrame(render);
   } catch (err) {
