@@ -166,10 +166,17 @@ function animateGate(p) {
 
 const cameraFrame = {position: [0,0,0], target: [0,0,0]};
 function updateCamera(p) {
-  const {position, target} = sampleJourney(p, cameraFrame);
+  const {position, target, zoom} = sampleJourney(p, cameraFrame);
   const px = reduceMotion || isMobile ? 0 : pointerX * .04;
   const py = reduceMotion || isMobile ? 0 : pointerY * .02;
   camera.position.set(position[0] + px, position[1] - py, position[2]);
+  // Zoom shares the same continuous curve and smoothed scroll progress as
+  // position and aim; changing FOV cannot introduce a separate timing jump.
+  const fov = THREE.MathUtils.lerp(isMobile ? 64 : 55, isMobile ? 46 : 38, zoom);
+  if (Math.abs(camera.fov - fov) > 1e-6) {
+    camera.fov = fov;
+    camera.updateProjectionMatrix();
+  }
   camera.lookAt(target[0] + px, target[1] - py, target[2]);
   sun.position.set(-12, 18, camera.position.z + 10);
   sun.target.position.set(0, 0, camera.position.z - 7);

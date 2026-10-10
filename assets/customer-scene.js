@@ -134,7 +134,10 @@ export const journey = [
   {p: .49,  position: [-.3,1.68,-62],    target: [.3,1.34,-73]},
   {p: .60,  position: [0,1.68,-69],      target: [0,1.34,-81]},
   {p: .66,  position: [0,1.68,-77],      target: [1.4,1.55,-87.8]},
-  {p: .705, position: [-2.0,1.68,-85.65], target: [1.4,1.55,-88.4]},
+  // Inspect the upper column/roof joint while continuing past it. The second
+  // detail frame advances instead of holding the camera at one position.
+  {p: .705, position: [-2.0,2.15,-85.65], target: [-1.02,2.61,-86.88], zoom: 1},
+  {p: .725, position: [-2.05,2.12,-86.10],target: [-.92,2.61,-87.10], zoom: 1},
   {p: .755, position: [-2.2,1.68,-89],   target: [1.2,1.7,-89]},
   // Align with the stair centreline on the ground, showing the first tread
   // before raising the camera. First tread begins at z=-95.314, y=.211.
@@ -148,8 +151,11 @@ export const journey = [
 
 // Monotone cubic Hermite interpolation keeps the velocity continuous through
 // each waypoint without overshooting the stair centreline or gate opening.
-const channels = ['position', 'target'].flatMap(key => [0,1,2].map(axis => {
-  const values = journey.map(frame => frame[key][axis]);
+const channels = [
+  ...['position', 'target'].flatMap(key => [0,1,2].map(axis => ({key,axis}))),
+  {key: 'zoom', axis: null}
+].map(({key,axis}) => {
+  const values = journey.map(frame => axis === null ? (frame[key] ?? 0) : frame[key][axis]);
   const intervals = journey.slice(1).map((frame,i) => frame.p - journey[i].p);
   const slopes = intervals.map((h,i) => (values[i+1] - values[i]) / h);
   const tangents = values.map((_,i) => {
@@ -162,7 +168,7 @@ const channels = ['position', 'target'].flatMap(key => [0,1,2].map(axis => {
     return (w1 + w2) / (w1 / left + w2 / right);
   });
   return {key, axis, values, tangents};
-}));
+});
 
 export function sampleJourney(progress, result = {position: [0,0,0], target: [0,0,0]}) {
   const p = THREE.MathUtils.clamp(progress, 0, 1);
@@ -171,10 +177,12 @@ export function sampleJourney(progress, result = {position: [0,0,0], target: [0,
   const a = journey[index], b = journey[index+1], h = b.p - a.p;
   const t = (p - a.p) / h, t2 = t*t, t3 = t2*t;
   for (const {key, axis, values, tangents} of channels) {
-    result[key][axis] = (2*t3 - 3*t2 + 1) * values[index]
+    const value = (2*t3 - 3*t2 + 1) * values[index]
       + (t3 - 2*t2 + t) * h * tangents[index]
       + (-2*t3 + 3*t2) * values[index+1]
       + (t3 - t2) * h * tangents[index+1];
+    if (axis === null) result[key] = value;
+    else result[key][axis] = value;
   }
   return result;
 }
