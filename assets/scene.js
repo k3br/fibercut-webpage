@@ -356,6 +356,7 @@ async function bootScene() {
     root.traverse(obj => {
       if (/^(SlidingGate|GateReturn|GatePost|Carport|Stair|RailRear|RailFront|RailRight|LandingPost|LandingHand|LandingMid)/.test(obj.name)) obj.visible = false;
       if (/^Car(?:Body|Cabin|Wheel\d+)$/.test(obj.name)) obj.visible = false;
+      if (obj.name === 'DrivewayCurb') obj.visible = false;
       if (/^House(?:Accent|Window)?1$/.test(obj.name)) obj.visible = false;
       // The customer's two-storey railing replaces this section of the old
       // roadside fence. Remove only meshes occupying the same frontage.
@@ -369,6 +370,17 @@ async function bootScene() {
     // Place the roadside fence on the curb, with its posts matching gate height.
     // Transform geometry in world space so posts, slats and panel frames agree.
     root.updateMatrixWorld(true);
+    // End the roadside curb at the sliding gate; the yard beyond is level.
+    const roadsideCurb = root.getObjectByName('CurbRight');
+    if (roadsideCurb?.isMesh) {
+      const bounds = new THREE.Box3().setFromObject(roadsideCurb);
+      const gateLineZ = -72.89;
+      const lengthScale = (bounds.max.z - gateLineZ) / (bounds.max.z - bounds.min.z);
+      const trim = new THREE.Matrix4().makeScale(1, 1, lengthScale);
+      trim.setPosition(0, 0, bounds.max.z * (1 - lengthScale));
+      const localTrim = roadsideCurb.matrixWorld.clone().invert().multiply(trim).multiply(roadsideCurb.matrixWorld);
+      roadsideCurb.geometry = roadsideCurb.geometry.clone().applyMatrix4(localTrim);
+    }
     // Pair the ten narrow strips into five strips of twice the face width.
     // This preserves the open rhythm instead of overlapping adjacent strips.
     root.traverse(obj => {
