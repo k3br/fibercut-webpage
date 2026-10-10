@@ -116,7 +116,7 @@ export async function installCustomerModels(scene, loader, isMobile) {
 
   return {gate, movingGate, carport, stairs, door, fence, coffeeTable, diningTable,
     animate(progress) {
-      const open = THREE.MathUtils.smoothstep(progress, .48, .60);
+      const open = THREE.MathUtils.smoothstep(progress, .45, .625);
       const travel = open * 5.9;
       movingGate.position.set(-.9533 * travel, 0, .3022 * travel);
     }
