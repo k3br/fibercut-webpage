@@ -139,14 +139,15 @@ export const journey = [
   {p: .705, position: [-2.0,2.15,-85.65], target: [-1.02,2.61,-86.88], zoom: 1},
   {p: .725, position: [-2.05,2.12,-86.10],target: [-.92,2.61,-87.10], zoom: 1},
   {p: .755, position: [-2.2,1.68,-89],   target: [1.2,1.7,-89]},
-  // Align with the stair centreline on the ground, showing the first tread
-  // before raising the camera. First tread begins at z=-95.314, y=.211.
-  {p: .78,  position: [-3.525,1.68,-93.6],target: [-3.525,.8,-95.8]},
-  {p: .80,  position: [-3.525,1.68,-94.85],target: [-3.525,1.0,-96.4]},
-  {p: .815, position: [-3.525,1.86,-95.45],target: [-3.525,2.15,-97.1]},
-  {p: .845, position: [-3.525,2.80,-96.62],target: [-3.18,3.05,-99.1]},
-  {p: .89,  position: [-3.525,4.19,-98.75],target: [-3.18,3.55,-100.35]},
-  {p: 1,    position: [-3.525,4.19,-100],target: [-4.02,3.55,-100.55]}
+  // Walk 25.5 cm left of centre, inside the railing. Aim 20 degrees right
+  // across the treads so both the stair width and opposite railing are visible.
+  // First tread begins at z=-95.314, y=.211; climb still starts at its foot.
+  {p: .78,  position: [-3.78,1.68,-93.6],target: [-2.979,.8,-95.8]},
+  {p: .80,  position: [-3.78,1.68,-94.85],target: [-3.216,1.0,-96.4]},
+  {p: .815, position: [-3.78,1.86,-95.45],target: [-3.179,2.15,-97.1]},
+  {p: .845, position: [-3.78,2.80,-96.62],target: [-2.877,3.05,-99.1]},
+  {p: .89,  position: [-3.78,4.19,-98.75],target: [-3.198,3.55,-100.35]},
+  {p: 1,    position: [-3.78,4.19,-100],target: [-4.02,3.55,-100.55]}
 ];
 
 // Monotone cubic Hermite interpolation keeps the velocity continuous through
