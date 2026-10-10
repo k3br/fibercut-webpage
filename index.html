@@ -29,6 +29,14 @@ body {
   overflow-x: hidden;
 }
 a { color: inherit; }
+.is-detail-shot .copy { opacity: 0; pointer-events: none; }
+.detail-caption { position: fixed; z-index: 8; left: 5vw; bottom: 8vh; width: min(370px, 35vw); padding: 24px; background: rgba(18,25,29,.88); color: #f5f3ed; opacity: 0; transform: translateY(12px); transition: opacity .35s, transform .35s; pointer-events: none; }
+.detail-caption .eyebrow { color: #c1db72; font-size: 11px; letter-spacing: .16em; }
+.detail-caption h2 { font-size: clamp(24px, 2.8vw, 38px); line-height: 1.08; margin: 12px 0; }
+.detail-caption p:last-child { font-size: 15px; line-height: 1.55; margin: 0; }
+.is-detail-shot .detail-carport { opacity: 1; transform: none; }
+@media (max-width: 700px) { .detail-caption { left: 5vw; bottom: 4vh; width: 90vw; padding: 18px; } .detail-caption h2 { font-size: 25px; } .detail-caption p:last-child { font-size: 14px; } }
+@media (prefers-reduced-motion: reduce) { .detail-caption { transition: none; } }
 
 #scene, .webgl-fallback {
   position: fixed;
@@ -337,6 +345,11 @@ body.is-loading { overflow: hidden; }
     </section>
   </main>
 
+  <aside class="detail-caption detail-carport" aria-hidden="true">
+    <p class="eyebrow">CNC RAZREZ / DETAJL NADSTREŠKA</p>
+    <h2>Spoj mora biti točen.</h2>
+    <p>CNC razrez nam omogoča natančno izdelavo odprtin in robov. Pri takem spoju mora vsak kos priti na svoje mesto. Zato se natančnost začne pri načrtu, še preden razrežemo material.</p>
+  </aside>
   <div class="webgl-fallback" id="webglFallback" hidden>
     <div class="fallback-pattern"></div>
   </div>

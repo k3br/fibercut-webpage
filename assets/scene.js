@@ -172,8 +172,16 @@ function animateGate(p) {
 
 const cameraFrame = {position: [0,0,0], target: [0,0,0]};
 const cameraAngles = new THREE.Euler(0,0,0,'YXZ');
+const detailCaption = document.querySelector('.detail-carport');
+let detailVisible = false;
 function updateCamera(p) {
   const {position, yaw, pitch, zoom} = sampleJourney(p, cameraFrame);
+  const showDetail = zoom > .7;
+  if (showDetail !== detailVisible) {
+    detailVisible = showDetail;
+    document.body.classList.toggle('is-detail-shot', showDetail);
+    detailCaption?.setAttribute('aria-hidden', String(!showDetail));
+  }
   const px = reduceMotion || isMobile ? 0 : pointerX * .04;
   const py = reduceMotion || isMobile ? 0 : pointerY * .02;
   camera.position.set(position[0] + px, position[1] - py, position[2]);
