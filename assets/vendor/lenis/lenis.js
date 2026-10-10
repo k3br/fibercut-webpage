@@ -1053,5 +1053,3 @@ var Lenis = class {
 };
 //#endregion
 export { Lenis as default };
-
-
