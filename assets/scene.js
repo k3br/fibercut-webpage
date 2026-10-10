@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
-import { installCustomerModels, journey } from './customer-scene.js';
+import { installCustomerModels, sampleJourney } from './customer-scene.js';
 import { installEnvironment } from './environment.js';
 
 const canvas = document.querySelector('#scene');
@@ -146,17 +146,7 @@ let started = false;
 
 function getProgress() {
   const max = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
-  const scroll = THREE.MathUtils.clamp(window.scrollY / max, 0, 1);
-  // Spend more physical scrolling on turns, rather than delaying the camera.
-  const sections = [[0,.28,1],[.28,.40,1.8],[.40,.66,1],[.66,.755,3],[.755,.80,2.5],[.80,.96,2],[.96,1,1]];
-  const total = sections.reduce((sum,[a,b,weight])=>sum+(b-a)*weight,0);
-  let remaining = scroll * total;
-  for (const [a,b,weight] of sections) {
-    const distance = (b-a)*weight;
-    if (remaining <= distance) return a + remaining/weight;
-    remaining -= distance;
-  }
-  return 1;
+  return THREE.MathUtils.clamp(window.scrollY / max, 0, 1);
 }
 
 function updateChapter(p) {
@@ -170,32 +160,17 @@ function updateChapter(p) {
   progressBar.style.height = `${Math.round(p * 100)}%`;
 }
 
-function ease01(v) {
-  v = THREE.MathUtils.clamp(v, 0, 1);
-  return v * v * (3 - 2 * v);
-}
-
 function animateGate(p) {
   customerModels?.animate(p);
 }
 
-function updateCamera(p, t, elapsed = 0) {
-  let index = journey.findIndex((frame, i) => i < journey.length - 1 && p <= journey[i + 1].p);
-  if (index < 0) index = journey.length - 2;
-  const a = journey[index], b = journey[index + 1];
-  const q = ease01((p - a.p) / (b.p - a.p));
-  const mix = (key, axis) => THREE.MathUtils.lerp(a[key][axis], b[key][axis], q);
+const cameraFrame = {position: [0,0,0], target: [0,0,0]};
+function updateCamera(p) {
+  const {position, target} = sampleJourney(p, cameraFrame);
   const px = reduceMotion || isMobile ? 0 : pointerX * .04;
   const py = reduceMotion || isMobile ? 0 : pointerY * .02;
-  camera.position.set(mix('position',0) + px, mix('position',1) - py, mix('position',2));
-  const baseFov = isMobile ? 64 : 55;
-  const detailFov = frame => frame.fov ? frame.fov + (isMobile ? 8 : 0) : baseFov;
-  camera.fov = THREE.MathUtils.lerp(detailFov(a), detailFov(b), q);
-  const detailAmount = THREE.MathUtils.lerp(a.detail ? 1 : 0, b.detail ? 1 : 0, q);
-  document.body.classList.toggle('is-detail-shot', detailAmount > .7);
-  document.body.dataset.detail = detailAmount > .7 ? (a.detail || b.detail || '') : '';
-  camera.updateProjectionMatrix();
-  camera.lookAt(mix('target',0) + px, mix('target',1) - py, mix('target',2));
+  camera.position.set(position[0] + px, position[1] - py, position[2]);
+  camera.lookAt(target[0] + px, target[1] - py, target[2]);
   sun.position.set(-12, 18, camera.position.z + 10);
   sun.target.position.set(0, 0, camera.position.z - 7);
 }
@@ -215,16 +190,14 @@ if (!isMobile) {
 let lastFrame = 0;
 function render(t = 0) {
   if (!started) return;
-  targetProgress = getProgress();
   const delta = targetProgress - smoothProgress;
   const elapsed = Math.min(.1, (t - lastFrame) / 1000 || 1 / 60);
   lastFrame = t;
-  // A light settling motion between steps; stair climbing stays scroll-direct.
-  const onStairs = targetProgress >= .80;
-  const follow = reduceMotion || onStairs ? 1 : 1 - Math.exp(-elapsed * 12);
+  // Use the same frame-rate-independent smoothing for the entire journey.
+  const follow = reduceMotion ? 1 : 1 - Math.exp(-elapsed * 14);
   smoothProgress += delta * follow;
 
-  updateCamera(smoothProgress, t, elapsed);
+  updateCamera(smoothProgress);
   animateGate(smoothProgress);
   renderer.render(scene, camera);
   requestAnimationFrame(render);
@@ -237,6 +210,8 @@ function resize() {
   camera.updateProjectionMatrix();
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, mobile ? 1.75 : 2.0));
   renderer.setSize(window.innerWidth, window.innerHeight, false);
+  targetProgress = getProgress();
+  updateChapter(targetProgress);
 }
 window.addEventListener('resize', resize, { passive: true });
 
@@ -415,7 +390,7 @@ async function bootScene() {
     targetProgress = getProgress();
     smoothProgress = targetProgress;
     updateChapter(targetProgress);
-    updateCamera(smoothProgress, performance.now());
+    updateCamera(smoothProgress);
     animateGate(smoothProgress);
 
     // Compile all imported materials before scroll is enabled.

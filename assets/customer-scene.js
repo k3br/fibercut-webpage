@@ -123,7 +123,7 @@ export async function installCustomerModels(scene, loader, isMobile) {
   };
 }
 
-// Gate is fully clear before the camera crosses z=-73. The last keyframe stays
+// Gate is fully clear before the camera crosses z=-73. The journey ends
 // outside the entrance, above the actual CAD landing (2.51 m + eye height).
 export const journey = [
   {p: 0,    position: [-.3,1.68,7],      target: [2.9,1.34,-3.5]},
@@ -134,9 +134,7 @@ export const journey = [
   {p: .49,  position: [-.3,1.68,-62],    target: [.3,1.34,-73]},
   {p: .60,  position: [0,1.68,-69],      target: [0,1.34,-81]},
   {p: .66,  position: [0,1.68,-77],      target: [1.4,1.55,-87.8]},
-  // Near-left upper CAD joint: column, perimeter beam and roof members.
-  {p: .705, position: [-2.0,2.15,-85.65], target: [-1.02,2.61,-86.88], fov: 38, detail: 'carport-roof-joint'},
-  {p: .725, position: [-2.0,2.15,-85.65], target: [-1.02,2.61,-86.88], fov: 38, detail: 'carport-roof-joint'},
+  {p: .705, position: [-2.0,1.68,-85.65], target: [1.4,1.55,-88.4]},
   {p: .755, position: [-2.2,1.68,-89],   target: [1.2,1.7,-89]},
   // Align with the stair centreline on the ground, showing the first tread
   // before raising the camera. First tread begins at z=-95.314, y=.211.
@@ -145,6 +143,38 @@ export const journey = [
   {p: .815, position: [-3.525,1.86,-95.45],target: [-3.525,2.15,-97.1]},
   {p: .845, position: [-3.525,2.80,-96.62],target: [-3.18,3.05,-99.1]},
   {p: .89,  position: [-3.525,4.19,-98.75],target: [-3.18,3.55,-100.35]},
-  {p: .96,  position: [-3.525,4.19,-100],target: [-4.02,3.55,-100.55]},
   {p: 1,    position: [-3.525,4.19,-100],target: [-4.02,3.55,-100.55]}
 ];
+
+// Monotone cubic Hermite interpolation keeps the velocity continuous through
+// each waypoint without overshooting the stair centreline or gate opening.
+const channels = ['position', 'target'].flatMap(key => [0,1,2].map(axis => {
+  const values = journey.map(frame => frame[key][axis]);
+  const intervals = journey.slice(1).map((frame,i) => frame.p - journey[i].p);
+  const slopes = intervals.map((h,i) => (values[i+1] - values[i]) / h);
+  const tangents = values.map((_,i) => {
+    if (i === 0) return slopes[0];
+    if (i === values.length - 1) return slopes.at(-1);
+    const left = slopes[i-1], right = slopes[i];
+    if (left * right <= 0) return 0;
+    const w1 = 2 * intervals[i] + intervals[i-1];
+    const w2 = intervals[i] + 2 * intervals[i-1];
+    return (w1 + w2) / (w1 / left + w2 / right);
+  });
+  return {key, axis, values, tangents};
+}));
+
+export function sampleJourney(progress, result = {position: [0,0,0], target: [0,0,0]}) {
+  const p = THREE.MathUtils.clamp(progress, 0, 1);
+  let index = journey.findIndex((frame,i) => i < journey.length - 1 && p <= journey[i+1].p);
+  if (index < 0) index = journey.length - 2;
+  const a = journey[index], b = journey[index+1], h = b.p - a.p;
+  const t = (p - a.p) / h, t2 = t*t, t3 = t2*t;
+  for (const {key, axis, values, tangents} of channels) {
+    result[key][axis] = (2*t3 - 3*t2 + 1) * values[index]
+      + (t3 - 2*t2 + t) * h * tangents[index]
+      + (-2*t3 + 3*t2) * values[index+1]
+      + (t3 - t2) * h * tangents[index+1];
+  }
+  return result;
+}

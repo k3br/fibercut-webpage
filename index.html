@@ -91,14 +91,6 @@ a { color: inherit; }
 .hero { min-height: 120vh; align-items: center; }
 .copy { width: min(760px, 64vw); position: relative; }
 .copy { transition: opacity .35s ease; }
-.is-detail-shot .copy { opacity: 0; pointer-events: none; }
-.detail-caption { position: fixed; z-index: 8; left: 5vw; bottom: 8vh; width: min(370px, 35vw); padding: 24px; background: rgba(18,25,29,.88); color: #f5f3ed; opacity: 0; transform: translateY(12px); transition: opacity .35s, transform .35s; pointer-events: none; }
-.detail-caption .eyebrow { color: #c1db72; font-size: 11px; letter-spacing: .16em; }
-.detail-caption h2 { font-size: clamp(24px, 2.8vw, 38px); line-height: 1.08; margin: 12px 0; }
-.detail-caption p:last-child { font-size: 15px; line-height: 1.55; margin: 0; }
-body[data-detail="carport-roof-joint"] .detail-carport { opacity: 1; transform: none; }
-@media (max-width: 700px) { .detail-caption { left: 5vw; bottom: 4vh; width: 90vw; padding: 18px; } .detail-caption h2 { font-size: 25px; } .detail-caption p:last-child { font-size: 14px; } }
-@media (prefers-reduced-motion: reduce) { .detail-caption { transition: none; } }
 .copy-left { margin-right: auto; }
 .copy-right { margin-left: auto; text-align: left; width: min(620px, 50vw); }
 .copy.narrow { max-width: 590px; }
@@ -144,7 +136,7 @@ h1 em, h2 em { font-family: Georgia, "Times New Roman", serif; font-weight: 400;
 .scroll-cue i:after { content: ""; position: absolute; inset: 0; background: var(--acid); transform: translateX(-100%); animation: scrollLine 1.8s ease-in-out infinite; }
 
 .contact-section { min-height: 118vh; align-items: flex-end; padding: 18vh var(--pad) 32px; flex-wrap: wrap; }
-.reveal-section { min-height: 230vh; }
+.reveal-section { min-height: 110vh; }
 .contact-card { margin-left: auto; width: min(800px, 65%); padding: clamp(30px, 5vw, 72px); background: rgba(10,11,13,.42); border: 1px solid rgba(255,255,255,.10); backdrop-filter: blur(10px); }
 .contact-card h2 { max-width: 900px; }
 .contact-grid { margin-top: 48px; padding-top: 24px; border-top: 1px solid rgba(255,255,255,.18); display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
@@ -167,7 +159,7 @@ footer { width: 100%; display: flex; justify-content: space-between; gap: 20px; 
   .chapter-rail { display: none; }
   .story-section { min-height: 105vh; padding-top: 90px; }
   .hero { min-height: 115vh; }
-  .reveal-section { min-height: 240vh; }
+  .reveal-section { min-height: 105vh; }
   .contact-section { min-height: 128vh; padding-top: 24vh; }
   .contact-card { width: 100%; margin-left: 0; background: rgba(10,11,13,.34); backdrop-filter: blur(8px); }
   .copy, .copy-right { width: 100%; margin: 0; }
@@ -215,7 +207,7 @@ body.is-loading { overflow: hidden; }
 .scene-preloader-line i { display: block; width: 45%; height: 100%; background: var(--acid); animation: preloadSweep .9s ease-in-out infinite; }
 @keyframes preloadSweep { 0% { transform: translateX(-110%); } 100% { transform: translateX(245%); } }
 
-.site-credit { display:inline-flex; align-items:center; gap:6px; text-decoration:none; text-transform:none; font-size:8px; opacity:.65; } .site-credit img { width:62px; height:20px; object-fit:contain; }.top-nav .nav-gallery { border:1px dashed rgba(242,239,231,.38); padding:10px 14px; color:rgba(242,239,231,.72); } .top-nav .nav-gallery:hover, .top-nav .nav-gallery:focus-visible { border-color:rgba(242,239,231,.75); color:var(--paper); } @media(max-width:800px) { .top-nav .nav-gallery { padding:9px 10px; } .top-nav { gap:12px; } }@media(max-width:380px) { .site-header { padding:0 16px; gap:8px; } .brand img { width:90px; } .top-nav { font-size:8px; gap:8px; } .top-nav .nav-cta, .top-nav .nav-gallery { padding:8px 7px; } } /* More scroll distance for the fence turn, roof inspection and stair climb. */ #vzorci { min-height:180vh; } .reveal-section { min-height:370vh; } #izmera { min-height:110vh; } .contact-section { min-height:165vh; } </style>
+.site-credit { display:inline-flex; align-items:center; gap:6px; text-decoration:none; text-transform:none; font-size:8px; opacity:.65; } .site-credit img { width:62px; height:20px; object-fit:contain; }.top-nav .nav-gallery { border:1px dashed rgba(242,239,231,.38); padding:10px 14px; color:rgba(242,239,231,.72); } .top-nav .nav-gallery:hover, .top-nav .nav-gallery:focus-visible { border-color:rgba(242,239,231,.75); color:var(--paper); } @media(max-width:800px) { .top-nav .nav-gallery { padding:9px 10px; } .top-nav { gap:12px; } }@media(max-width:380px) { .site-header { padding:0 16px; gap:8px; } .brand img { width:90px; } .top-nav { font-size:8px; gap:8px; } .top-nav .nav-cta, .top-nav .nav-gallery { padding:8px 7px; } } </style>
 </head>
 <body class="is-loading">
   <div class="scene-preloader" id="scenePreloader" aria-label="Kontakt med nalaganjem">
@@ -344,11 +336,6 @@ body.is-loading { overflow: hidden; }
     </section>
   </main>
 
-  <aside class="detail-caption detail-carport">
-    <p class="eyebrow">CNC RAZREZ / DETAJL NADSTREŠKA</p>
-    <h2>Spoj mora biti točen.</h2>
-    <p>CNC razrez nam omogoča natančno izdelavo odprtin in robov. Pri takem spoju mora vsak kos priti na svoje mesto. Zato se natančnost začne pri načrtu, še preden razrežemo material.</p>
-  </aside>
   <div class="webgl-fallback" id="webglFallback" hidden>
     <div class="fallback-pattern"></div>
   </div>
