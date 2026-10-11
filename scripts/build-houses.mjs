@@ -2,6 +2,9 @@
 import fs from 'node:fs/promises';
 import * as THREE from 'three';
 import {Document, NodeIO} from '@gltf-transform/core';
+import {ALL_EXTENSIONS} from '@gltf-transform/extensions';
+import {dedup, weld, meshopt} from '@gltf-transform/functions';
+import {MeshoptEncoder} from 'meshoptimizer';
 
 // Original metre-scale furniture assets: no third-party model or texture licences.
 const oak = new THREE.MeshStandardMaterial({color:0xb68a56,roughness:.65});
@@ -41,7 +44,11 @@ async function exportGLB(group,file) {
     if(geometry.index)primitive.setIndices(doc.createAccessor().setType('SCALAR').setArray(new Uint16Array(geometry.index.array)).setBuffer(buffer));
     scene.addChild(doc.createNode(part.name).setMesh(doc.createMesh(part.name).addPrimitive(primitive)));
   });
-  await new NodeIO().write(file,doc);console.log(file,(await fs.stat(file)).size,'bytes');
+  await MeshoptEncoder.ready;
+  await doc.transform(dedup(),weld(),meshopt({encoder:MeshoptEncoder,level:'high'}));
+  await new NodeIO().registerExtensions(ALL_EXTENSIONS)
+    .registerDependencies({'meshopt.encoder':MeshoptEncoder}).write(file,doc);
+  console.log(file,(await fs.stat(file)).size,'bytes');
 }
 
 const plaster=new THREE.MeshStandardMaterial({name:'WarmWhitePlaster',color:0xd6d5cc,roughness:.9});
