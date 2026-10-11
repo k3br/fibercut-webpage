@@ -85,7 +85,7 @@ scene.add(fill);
 
 // A few very cheap warm architectural lights around the final carport scene.
 for (const [x,y,z,power] of [
-  [-4.4,.55,-81,2.1], [5.7,.55,-83,1.9], [-4.7,.55,-92,1.7], [5.8,.55,-94,1.7], [.7,2.45,-88.7,2.7]
+  [-4.4,.55,-81,2.1], [5.7,.55,-83,1.9], [-4.7,.55,-92,1.7], [.7,2.45,-88.7,2.7]
 ]) {
   const l = new THREE.PointLight(0xffd09a, power, 12, 2);
   l.position.set(x,y,z);

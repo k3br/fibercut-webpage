@@ -44,6 +44,7 @@ export async function installEnvironment(scene, root, loader, isMobile) {
     if (/^House[02]$/.test(o.name)) o.visible = true;
     if (/^House(?:Accent|Window)?[34]$|^House(?:Accent|Window)[02]$/.test(o.name)) o.visible = false;
     if (/^(Tree|Bush)/i.test(o.name)) o.visible = false;
+    if (/^Bollard(?:Glow)?3$/.test(o.name)) o.visible = false;
     if (!o.isMesh) return;
     const mats = [o.material].flat();
     if (o.name === 'Ground' || mats.some(m=>/ArtificialTurf/i.test(m.name))) { o.material = lawn; o.receiveShadow = true; }
@@ -87,6 +88,31 @@ export async function installEnvironment(scene, root, loader, isMobile) {
     geometry.setAttribute('position',positions);
     geometry.computeBoundingBox(); geometry.computeBoundingSphere();
     surface.geometry = geometry;
+  }
+  // Beside the carport, pavement stops at the pad's right edge. Keep the
+  // wider entrance by the garage; the existing lawn covers the removed strip.
+  const driveway = root.getObjectByName('Driveway');
+  if (driveway?.isMesh) {
+    root.updateMatrixWorld(true);
+    const bounds = new THREE.Box3().setFromObject(driveway);
+    const edge = 2.1 + 6.7/2;
+    const outline = [
+      [bounds.min.x,bounds.min.z], [edge,bounds.min.z],
+      [edge,-84], [bounds.max.x,-84],
+      [bounds.max.x,bounds.max.z], [bounds.min.x,bounds.max.z]
+    ].map(([x,z])=>new THREE.Vector2(x,z));
+    const indices = THREE.ShapeUtils.triangulateShape(outline,[]).flat();
+    const inverse = driveway.matrixWorld.clone().invert();
+    const positions = outline.flatMap(p=>new THREE.Vector3(p.x,bounds.max.y,p.y).applyMatrix4(inverse).toArray());
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));
+    geometry.setAttribute('uv',new THREE.Float32BufferAttribute(outline.flatMap(p=>[(p.x-bounds.min.x)/17,(p.y-bounds.min.z)/48]),2));
+    // X/Z contour winding points down; reverse it for the top surface.
+    geometry.setIndex(indices.flatMap((_,i)=>i%3===0?[indices[i],indices[i+2],indices[i+1]]:[]));
+    geometry.computeVertexNormals();
+    geometry.computeBoundingBox(); geometry.computeBoundingSphere();
+    driveway.geometry.dispose();
+    driveway.geometry = geometry;
   }
   const residences = [
     [garage, 6.9, -79, -Math.PI/2], [woodshed, -5.6, -80, Math.PI/2]
