@@ -30,8 +30,9 @@ not downloaded from a model marketplace, and contain no third-party textures.
 The local construction scripts were reviewed during this audit.
 The separate CC0 house preparation source is retained in `scripts/build-houses.mjs`.
 Original outbuilding geometry is retained in `scripts/build-outbuildings.mjs`.
-Only house-villa and house-pavilion are loaded; house-cantilever is retained
-as an unused prepared CC0 asset. Active background models total 54,620 bytes.
+Only house-pavilion is loaded (reused along the road); house-villa and
+house-cantilever are retained as unused prepared CC0 assets. Active background
+models total 39,012 bytes, including the garage and woodshed.
 No external model attribution or model licence fee is required for these assets. This
 statement does not grant an open-source licence to the entire project.
 

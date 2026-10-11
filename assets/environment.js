@@ -5,20 +5,19 @@ import * as THREE from 'three';
 // grass / sky: Poly Haven grass_ground and kloofendal_48d_partly_cloudy_puresky
 // (CC0-1.0), polyhaven.com/license; resized original texture/HDRI downloads.
 // tree-natural: original procedural project geometry, no downloaded model.
-// Houses: Kenney City Kit Suburban 2.0, building-type-p/g (CC0-1.0).
+// Background house backs: Kenney City Kit Suburban 2.0, building-type-g (CC0-1.0).
 // Neutral roof colours, metre scale and compressed geometry; see notices.
 // Garage and woodshed: original procedural project models, no external assets.
 
 // Shared landscape assets; repeated background planting uses instancing.
 export async function installEnvironment(scene, root, loader, isMobile) {
   const textures = new THREE.TextureLoader();
-  const [oak, pine, naturalTree, sky, grass, villa, pavilion, garage, woodshed] = await Promise.all([
+  const [oak, pine, naturalTree, sky, grass, pavilion, garage, woodshed] = await Promise.all([
     loader.loadAsync('assets/environment/tree-oak.glb'),
     loader.loadAsync('assets/environment/tree-pine.glb'),
     loader.loadAsync('assets/environment/tree-natural.glb'),
     textures.loadAsync('assets/environment/sky.webp'),
     textures.loadAsync('assets/environment/grass.webp'),
-    loader.loadAsync('assets/environment/house-villa.glb'),
     loader.loadAsync('assets/environment/house-pavilion.glb'),
     loader.loadAsync('assets/environment/garage.glb'),
     loader.loadAsync('assets/environment/woodshed.glb')
@@ -47,15 +46,35 @@ export async function installEnvironment(scene, root, loader, isMobile) {
     const mats = [o.material].flat();
     if (o.name === 'Ground' || mats.some(m=>/ArtificialTurf/i.test(m.name))) { o.material = lawn; o.receiveShadow = true; }
   });
+  // End paved surfaces at the back of the stair building. The existing
+  // grass ground continues beyond this line, including the contact backdrop.
+  root.updateMatrixWorld(true);
+  for (const name of ['Road','Driveway']) {
+    const surface = root.getObjectByName(name);
+    if (!surface?.isMesh) continue;
+    const geometry = surface.geometry.clone(), original = geometry.getAttribute('position');
+    const positions = new THREE.Float32BufferAttribute(original.count*3,3);
+    const inverse = surface.matrixWorld.clone().invert(), point = new THREE.Vector3();
+    for (let i=0;i<original.count;i++) {
+      point.fromBufferAttribute(original,i).applyMatrix4(surface.matrixWorld);
+      point.z = Math.max(point.z,-101);
+      point.applyMatrix4(inverse);
+      positions.setXYZ(i,point.x,point.y,point.z);
+    }
+    geometry.setAttribute('position',positions);
+    geometry.computeBoundingBox(); geometry.computeBoundingSphere();
+    surface.geometry = geometry;
+  }
   const residences = [
-    [villa, 10, -18], [pavilion, 10, -58],
-    [garage, 12.3, -88], [woodshed, 10, -112]
+    [pavilion, 10, -18, Math.PI/2], [pavilion, 10, -58, -Math.PI/2],
+    [garage, 6.9, -79, -Math.PI/2], [woodshed, -5.6, -80, Math.PI/2]
   ];
-  for (const [asset,x,z] of residences) {
+  for (const [asset,x,z,rotation] of residences) {
     const house = asset.scene.clone(true);
     house.name = `BackgroundResidence_${z}`;
-    // Front faces the street; footprint stays behind the existing fences.
-    house.rotation.y = -Math.PI/2;
+    // The first prop presents a quiet rear elevation, with the same low roof
+    // as the second. Outbuilding entrances face inward across the driveway.
+    house.rotation.y = rotation;
     house.position.set(x,.02,z);
     house.traverse(o => {
       if (!o.isMesh) return;
