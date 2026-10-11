@@ -5,16 +5,20 @@ import * as THREE from 'three';
 // grass / sky: Poly Haven grass_ground and kloofendal_48d_partly_cloudy_puresky
 // (CC0-1.0), polyhaven.com/license; resized original texture/HDRI downloads.
 // tree-natural: original procedural project geometry, no downloaded model.
+// house-villa / house-cantilever / house-pavilion: original project geometry.
 
 // Shared landscape assets; repeated background planting uses instancing.
 export async function installEnvironment(scene, root, loader, isMobile) {
   const textures = new THREE.TextureLoader();
-  const [oak, pine, naturalTree, sky, grass] = await Promise.all([
+  const [oak, pine, naturalTree, sky, grass, villa, cantilever, pavilion] = await Promise.all([
     loader.loadAsync('assets/environment/tree-oak.glb'),
     loader.loadAsync('assets/environment/tree-pine.glb'),
     loader.loadAsync('assets/environment/tree-natural.glb'),
     textures.loadAsync('assets/environment/sky.webp'),
-    textures.loadAsync('assets/environment/grass.webp')
+    textures.loadAsync('assets/environment/grass.webp'),
+    loader.loadAsync('assets/environment/house-villa.glb'),
+    loader.loadAsync('assets/environment/house-cantilever.glb'),
+    loader.loadAsync('assets/environment/house-pavilion.glb')
   ]);
   sky.colorSpace = THREE.SRGBColorSpace;
   sky.mapping = THREE.EquirectangularReflectionMapping;
@@ -32,11 +36,31 @@ export async function installEnvironment(scene, root, loader, isMobile) {
     shader.fragmentShader = shader.fragmentShader.replace('#include <map_fragment>', 'diffuseColor *= texture2D(map, lawnUV);');
   };
   root.traverse(o => {
+    // Replace background props only. The customer balcony facade and its
+    // mounted railings remain the product presentation in the foreground.
+    if (/^House(?:Accent|Window)?[0234]$/.test(o.name)) o.visible = false;
     if (/^(Tree|Bush)/i.test(o.name)) o.visible = false;
     if (!o.isMesh) return;
     const mats = [o.material].flat();
     if (o.name === 'Ground' || mats.some(m=>/ArtificialTurf/i.test(m.name))) { o.material = lawn; o.receiveShadow = true; }
   });
+  const residences = [
+    [villa, 10, -18], [pavilion, 10, -58],
+    [cantilever, 12.3, -88], [villa, 10, -112]
+  ];
+  for (const [asset,x,z] of residences) {
+    const house = asset.scene.clone(true);
+    house.name = `BackgroundResidence_${z}`;
+    // Front faces the street; footprint stays behind the existing fences.
+    house.rotation.y = Math.PI/2;
+    house.position.set(x,.02,z);
+    house.traverse(o => {
+      if (!o.isMesh) return;
+      o.castShadow = !isMobile;
+      o.receiveShadow = true;
+    });
+    scene.add(house);
+  }
   const sites = [
     [-7,-5,5.1], [9,-12,5.8], [-8,-23,6], [10,-30,5.2],
     [-8,-43,5.5], [11,-51,6.3], [-8,-60,5], [11,-69,5.7],

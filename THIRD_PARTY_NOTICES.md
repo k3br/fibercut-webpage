@@ -20,13 +20,15 @@ a visible website credit. No Poly Haven website preview renders are used.
 
 ## Original assets generated for this project
 
-`assets/environment/tree-natural.glb`, `models/web/coffee-table.glb`,
+`assets/environment/tree-natural.glb`, `assets/environment/house-villa.glb`,
+`house-cantilever.glb`, `house-pavilion.glb`, `models/web/coffee-table.glb`,
 `models/web/dining-table.glb` (retained but no longer loaded),
 `models/web/outdoor-seating.glb` and `models/web/pool-table.glb` were built from
 procedural geometry for this project, with colour-only materials. They were
 not downloaded from a model marketplace, and contain no third-party textures.
-The local construction scripts were reviewed during this audit. No external
-model attribution or model licence fee is required for these assets. This
+The local construction scripts were reviewed during this audit.
+The house construction source is retained in `scripts/build-houses.mjs`.
+No external model attribution or model licence fee is required for these assets. This
 statement does not grant an open-source licence to the entire project.
 
 ## Customer-owned supplied assets
