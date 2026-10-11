@@ -5,20 +5,23 @@ import * as THREE from 'three';
 // grass / sky: Poly Haven grass_ground and kloofendal_48d_partly_cloudy_puresky
 // (CC0-1.0), polyhaven.com/license; resized original texture/HDRI downloads.
 // tree-natural: original procedural project geometry, no downloaded model.
-// house-villa / house-cantilever / house-pavilion: original project geometry.
+// Houses: Kenney City Kit Suburban 2.0, building-type-p/g (CC0-1.0).
+// Neutral roof colours, metre scale and compressed geometry; see notices.
+// Garage and woodshed: original procedural project models, no external assets.
 
 // Shared landscape assets; repeated background planting uses instancing.
 export async function installEnvironment(scene, root, loader, isMobile) {
   const textures = new THREE.TextureLoader();
-  const [oak, pine, naturalTree, sky, grass, villa, cantilever, pavilion] = await Promise.all([
+  const [oak, pine, naturalTree, sky, grass, villa, pavilion, garage, woodshed] = await Promise.all([
     loader.loadAsync('assets/environment/tree-oak.glb'),
     loader.loadAsync('assets/environment/tree-pine.glb'),
     loader.loadAsync('assets/environment/tree-natural.glb'),
     textures.loadAsync('assets/environment/sky.webp'),
     textures.loadAsync('assets/environment/grass.webp'),
     loader.loadAsync('assets/environment/house-villa.glb'),
-    loader.loadAsync('assets/environment/house-cantilever.glb'),
-    loader.loadAsync('assets/environment/house-pavilion.glb')
+    loader.loadAsync('assets/environment/house-pavilion.glb'),
+    loader.loadAsync('assets/environment/garage.glb'),
+    loader.loadAsync('assets/environment/woodshed.glb')
   ]);
   sky.colorSpace = THREE.SRGBColorSpace;
   sky.mapping = THREE.EquirectangularReflectionMapping;
@@ -46,13 +49,13 @@ export async function installEnvironment(scene, root, loader, isMobile) {
   });
   const residences = [
     [villa, 10, -18], [pavilion, 10, -58],
-    [cantilever, 12.3, -88], [villa, 10, -112]
+    [garage, 12.3, -88], [woodshed, 10, -112]
   ];
   for (const [asset,x,z] of residences) {
     const house = asset.scene.clone(true);
     house.name = `BackgroundResidence_${z}`;
     // Front faces the street; footprint stays behind the existing fences.
-    house.rotation.y = Math.PI/2;
+    house.rotation.y = -Math.PI/2;
     house.position.set(x,.02,z);
     house.traverse(o => {
       if (!o.isMesh) return;

@@ -10,6 +10,7 @@ in a GLB is not a copyright licence for its geometry or textures.
 | Deployed files | Source | Licence and attribution |
 | --- | --- | --- |
 | `assets/environment/tree-oak.glb`, `tree-pine.glb` | Kenney Nature Kit 2.1, `tree_detailed`, `tree_pineRoundB`: https://kenney.nl/assets/nature-kit | CC0 1.0; commercial use and modification permitted, credit optional. Original package notice: `licenses/kenney-nature-kit.txt`. |
+| `assets/environment/house-villa.glb`, `house-cantilever.glb`, `house-pavilion.glb` | Kenney City Kit Suburban 2.0, `building-type-p`, `building-type-q`, `building-type-g`: https://kenney.nl/assets/city-kit-suburban | CC0 1.0; metre scale, muted roofs, palette baked into vertex colours and Meshopt compression. Original notice: `licenses/kenney-city-kit-suburban.txt`. Replaces previous original procedural houses. |
 | `assets/environment/grass.webp` | Poly Haven `grass_ground` diffuse texture: https://polyhaven.com/a/grass_ground | CC0 1.0; resized and converted to WebP. |
 | `assets/environment/sky.webp` | Poly Haven `kloofendal_48d_partly_cloudy_puresky`, tonemapped JPG: https://polyhaven.com/a/kloofendal_48d_partly_cloudy_puresky | CC0 1.0; resized and converted to WebP. |
 
@@ -20,14 +21,17 @@ a visible website credit. No Poly Haven website preview renders are used.
 
 ## Original assets generated for this project
 
-`assets/environment/tree-natural.glb`, `assets/environment/house-villa.glb`,
-`house-cantilever.glb`, `house-pavilion.glb`, `models/web/coffee-table.glb`,
+`assets/environment/tree-natural.glb`, `assets/environment/garage.glb`,
+`assets/environment/woodshed.glb`, `models/web/coffee-table.glb`,
 `models/web/dining-table.glb` (retained but no longer loaded),
 `models/web/outdoor-seating.glb` and `models/web/pool-table.glb` were built from
 procedural geometry for this project, with colour-only materials. They were
 not downloaded from a model marketplace, and contain no third-party textures.
 The local construction scripts were reviewed during this audit.
-The house construction source is retained in `scripts/build-houses.mjs`.
+The separate CC0 house preparation source is retained in `scripts/build-houses.mjs`.
+Original outbuilding geometry is retained in `scripts/build-outbuildings.mjs`.
+Only house-villa and house-pavilion are loaded; house-cantilever is retained
+as an unused prepared CC0 asset. Active background models total 54,620 bytes.
 No external model attribution or model licence fee is required for these assets. This
 statement does not grant an open-source licence to the entire project.
 

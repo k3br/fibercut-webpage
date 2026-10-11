@@ -1,17 +1,32 @@
-# Original house assets
+# CC0 background house preparation
 
-`build-houses.mjs` creates the three background house GLBs from original
-procedural geometry and colour-only materials. It does not download assets.
+build-houses.mjs prepares existing Kenney City Kit Suburban 2.0 models:
+building-type-p (villa), building-type-q (cantilever), building-type-g (pavilion).
+These replace the previous procedural houses. Source and CC0 licence:
+https://kenney.nl/assets/city-kit-suburban
 
-Run from the repository root with Node.js and the build-only packages
-`three@0.185.1`, `@gltf-transform/core@4.5.1`,
-`@gltf-transform/extensions@4.5.1`, `@gltf-transform/functions@4.5.1` and
-`meshoptimizer@1.2.0` installed in your development
-environment: `node scripts/build-houses.mjs`.
-The website loads the exported GLBs, not this generator or its Node dependencies.
-Exports use Meshopt compression, decoded by the site's existing decoder.
-The three exports total 35,552 bytes (before HTTP compression). Each house has
-six material batches, no image textures, and the repeated villa reuses the
-loaded asset. The environment loads all three distinct assets in parallel.
+Download the official ZIP and unpack it locally. Run from the repository root:
 
-Licence/provenance inventory: `../THIRD_PARTY_NOTICES.md`.
+    node scripts/build-houses.mjs "path/to/Models/GLB format"
+
+Build-only packages: three@0.185.1, @gltf-transform/core@4.5.1,
+@gltf-transform/extensions@4.5.1, @gltf-transform/functions@4.5.1,
+meshoptimizer@1.2.0 and sharp.
+
+The conversion preserves house geometry, normalizes metre scale, mutes green
+roof colours to slate, bakes the palette into linear vertex colours and applies
+Meshopt compression. No image texture files are shipped with these houses.
+The front faces the street and no balconies are added.
+
+The three exports total 42,732 bytes. Each uses one material batch. The repeated
+villa reuses the loaded asset. All three models load in parallel through the
+site's existing decoder; Node build packages are not website dependencies.
+
+Licence inventory: ../THIRD_PARTY_NOTICES.md.
+
+The environment currently loads only villa and pavilion, plus the original
+garage and woodshed from build-outbuildings.mjs. The cantilever export is unused.
+Active background models total 54,620 bytes. All have no external image textures.
+Build the original outbuildings with the same packages:
+
+    node scripts/build-outbuildings.mjs
