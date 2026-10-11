@@ -1,5 +1,13 @@
 import * as THREE from 'three';
 
+// Remove the CAD plan rotation so the roof and columns follow the pad edges.
+const carportAlignment = Math.atan2(1.508962, 5.289146);
+function alignedCarportPoint([x,y,z]) {
+  const dx = x - 2.1, dz = z + 87.8;
+  return [2.1 + dx * Math.cos(carportAlignment) + dz * Math.sin(carportAlignment),
+    y, -87.8 - dx * Math.sin(carportAlignment) + dz * Math.cos(carportAlignment)];
+}
+
 // Positions are in metres. Preserve the original CAD groups for animation.
 export async function installCustomerModels(scene, loader, isMobile) {
   const [gateAsset, carportAsset, stairAsset, fenceAsset, coffeeAsset, diningAsset] = await Promise.all([
@@ -31,6 +39,7 @@ export async function installCustomerModels(scene, loader, isMobile) {
 
   const carport = renderModel(carportAsset.scene, 'CustomerCarportSite');
   carport.position.set(2.1, .03, -87.8);
+  carport.rotation.y = carportAlignment;
   const stairs = renderModel(stairAsset.scene, 'CustomerStairsSite');
   stairs.rotation.y = Math.PI / 2;
   stairs.position.set(-3.6, .03, -98);
@@ -87,7 +96,8 @@ export async function installCustomerModels(scene, loader, isMobile) {
       box(fence, `BalconyWindow_${x}_${y}`, [2.15, 1.95, .045], [x, y, -.53], glass);
     }
   }
-  box(carport, 'CustomerCarportPad', [6.7, .06, 5.3], [0, .01, 0], concrete);
+  const carportPad = box(carport, 'CustomerCarportPad', [6.7, .06, 5.3], [0, .01, 0], concrete);
+  carportPad.rotation.y = -carportAlignment;
   // Keep the furniture's own oak, steel and ceramic PBR materials.
   const installFurniture = (asset, name, position) => {
     const model = asset.scene;
@@ -136,8 +146,8 @@ export const journey = [
   {p: .66,  position: [0,1.68,-77],      target: [1.4,1.55,-87.8]},
   // Inspect the upper column/roof joint while continuing past it. The second
   // detail frame advances instead of holding the camera at one position.
-  {p: .705, position: [-2.0,2.15,-85.65], target: [-1.02,2.61,-86.88], zoom: 1},
-  {p: .725, position: [-2.05,2.12,-86.10],target: [-.92,2.61,-87.10], zoom: 1},
+  {p: .705, position: alignedCarportPoint([-2.0,2.15,-85.65]), target: alignedCarportPoint([-1.02,2.61,-86.88]), zoom: 1},
+  {p: .725, position: alignedCarportPoint([-2.05,2.12,-86.10]), target: alignedCarportPoint([-.92,2.61,-87.10]), zoom: 1},
   {p: .755, position: [-2.2,1.68,-89],   target: [1.2,1.7,-89]},
   // Walk on the left half, towards the house, with the original viewing angles.
   // First tread begins at z=-95.314, y=.211; climb still starts at its foot.
