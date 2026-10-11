@@ -14,8 +14,17 @@ Upload these files and folders to the same GitHub Pages folder:
   models/web/2_ograja.optimized.glb
   models/web/coffee-table.glb
   models/web/dining-table.glb
+  models/web/outdoor-seating.glb
+  models/web/pool-table.glb
+  THIRD_PARTY_NOTICES.md
+  licenses/
 
-All PBR textures are embedded inside fibercut-scene.glb.
+The dining table is retained as an unused original asset; the site loads the
+pool table instead. See THIRD_PARTY_NOTICES.md for the asset licence audit,
+complete software notices and supplied assets requiring ownership confirmation.
+
+The base scene textures are embedded inside fibercut-scene.glb; the environment
+also loads the separate CC0 sky and grass textures in assets/environment/.
 No MP4/video background is used. The camera moves through the actual 3D scene.
 Customer CAD models replace the old gate, carport and stairs. The gate opens
 before the camera crosses it. The journey ends at the entrance with contacts.

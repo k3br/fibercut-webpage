@@ -1,4 +1,10 @@
 import * as THREE from 'three';
+
+// Third-party notices: ../THIRD_PARTY_NOTICES.md and ../licenses/.
+// Three.js/addons: MIT, Three.js authors. MeshoptDecoder: MIT, Arseny Kapoulkine.
+// Lenis: MIT, darkroom.engineering. Preserve the complete supplied notices.
+// fibercut-scene.glb is supplied content; its embedded textures require the
+// same ownership/permission verification as its geometry.
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';

@@ -1,5 +1,10 @@
 import * as THREE from 'three';
 
+// Model provenance: ../THIRD_PARTY_NOTICES.md. Customer authorship of supplied
+// CAD was confirmed by the site owner on 2026-10-11; these assets are not CC0.
+// Coffee table, lounge seating and pool table are original procedural project
+// models with colour-only materials, not third-party marketplace downloads.
+
 // Remove the CAD plan rotation so the roof and columns follow the pad edges.
 const carportAlignment = Math.atan2(1.508962, 5.289146);
 function alignedCarportPoint([x,y,z]) {

@@ -1,5 +1,11 @@
 import * as THREE from 'three';
 
+// Asset provenance: ../THIRD_PARTY_NOTICES.md.
+// tree-oak / tree-pine: Kenney Nature Kit (CC0-1.0), kenney.nl/assets/nature-kit.
+// grass / sky: Poly Haven grass_ground and kloofendal_48d_partly_cloudy_puresky
+// (CC0-1.0), polyhaven.com/license; resized original texture/HDRI downloads.
+// tree-natural: original procedural project geometry, no downloaded model.
+
 // Shared landscape assets; repeated background planting uses instancing.
 export async function installEnvironment(scene, root, loader, isMobile) {
   const textures = new THREE.TextureLoader();
