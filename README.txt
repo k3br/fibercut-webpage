@@ -2,6 +2,9 @@ FIBERCUT 3D WEB PACKAGE
 
 Upload these files and folders to the same GitHub Pages folder:
   index.html
+  gallery.html
+  robots.txt
+  sitemap.xml
   assets/scene.js
   assets/customer-scene.js
   assets/environment.js
@@ -24,8 +27,8 @@ Upload these files and folders to the same GitHub Pages folder:
   THIRD_PARTY_NOTICES.md
   licenses/
 
-The dining table is retained as an unused original asset; the site loads the
-pool table instead. See THIRD_PARTY_NOTICES.md for the asset licence audit,
+The dining and pool tables are retained as unused original assets.
+See THIRD_PARTY_NOTICES.md for the asset licence audit,
 complete software notices and supplied assets requiring ownership confirmation.
 
 The base scene textures are embedded inside fibercut-scene.glb; the environment
@@ -37,6 +40,9 @@ Meshopt decoding is configured in assets/scene.js. All models load before the
 initial loading screen releases scrolling.
 
 Optional: README.txt does not need to be uploaded.
+SEO deployment and Search Console steps: SEO.md.
+Rebuild metadata and sitemap: node scripts/build-seo.mjs
+Validate SEO references: node scripts/check-seo.mjs
 
 Local development: .tools/ contains scripts, dependencies, model reports and
 the optional preview. It is excluded from Git by .gitignore and is not part
