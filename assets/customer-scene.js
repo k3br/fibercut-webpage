@@ -131,18 +131,7 @@ export async function installCustomerModels(scene, loader, isMobile) {
   box(stairs, 'EntranceBuilding', [5.3, 4.8, 5.8], [0, 2.4, -3.51], facade?.material || concrete);
   const entranceMetal = new THREE.MeshStandardMaterial({color:0x242d32,metalness:.45,roughness:.3});
   const entranceGlass = new THREE.MeshStandardMaterial({color:0x718b96,metalness:.8,roughness:.16});
-  // The CAD facade's visible face is at local Z=-.377; mount details
-  // in front of that surface, not on the extension's recessed backing wall.
-  box(stairs, 'UpperPanoramicWindowFrame', [2.9, 1.55, .08], [-.92, 3.60, -.37], entranceMetal);
-  box(stairs, 'UpperPanoramicGlazing', [2.74, 1.39, .025], [-.92, 3.60, -.314], entranceGlass);
-  for (const x of [-1.38,-.46]) {
-    box(stairs, 'PanoramicWindowMullion', [.035, 1.39, .035], [x,3.60,-.29], entranceMetal);
-  }
-  const lowerDoor = box(stairs, 'GroundEntranceDoor', [1.05,1.95,.07], [1.7,1.045,-.36], entranceMetal);
-  box(lowerDoor, 'GroundDoorGlazing', [.24,1.58,.018], [-.29,.07,.047], entranceGlass);
-  box(lowerDoor, 'GroundDoorHandle', [.025,.40,.04], [.37,-.05,.06], metal);
-  box(stairs, 'GroundDoorThreshold', [1.18,.05,.28], [1.7,.045,-.32], concrete);
-  // A second panorama on the enlarged left wing gives the extension a
+  // Keep the stair-facing wall plain. The panorama on the enlarged left wing gives the extension a
   // facade facing the driveway instead of a blank end wall.
   box(stairs, 'UpperWingPanoramicFrame', [.08,1.55,3.0], [-2.69,3.60,-3.62], entranceMetal);
   box(stairs, 'UpperWingPanoramicGlass', [.025,1.39,2.84], [-2.746,3.60,-3.62], entranceGlass);

@@ -129,6 +129,14 @@ export async function installEnvironment(scene, root, loader, isMobile) {
       o.receiveShadow = true;
     });
     scene.add(house);
+    if (asset === woodshed) {
+      scene.updateMatrixWorld(true);
+      const shedBounds = new THREE.Box3().setFromObject(house);
+      root.traverse(o => {
+        if (o.isMesh && /^Shrub/.test(o.name) &&
+            shedBounds.intersectsBox(new THREE.Box3().setFromObject(o))) o.visible = false;
+      });
+    }
   }
   const scanner = scannerAsset.scene;
   scanner.name = 'LeicaSurveyScanner';
