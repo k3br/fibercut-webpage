@@ -10,13 +10,14 @@ function alignedCarportPoint([x,y,z]) {
 
 // Positions are in metres. Preserve the original CAD groups for animation.
 export async function installCustomerModels(scene, loader, isMobile) {
-  const [gateAsset, carportAsset, stairAsset, fenceAsset, coffeeAsset, diningAsset] = await Promise.all([
+  const [gateAsset, carportAsset, stairAsset, fenceAsset, coffeeAsset, diningAsset, seatingAsset] = await Promise.all([
     loader.loadAsync('models/web/customer-gate.glb'),
     loader.loadAsync('models/web/4_nadstresek.optimized.glb'),
     loader.loadAsync('models/web/3_stopnice.optimized.glb'),
     loader.loadAsync('models/web/2_ograja.optimized.glb'),
     loader.loadAsync('models/web/coffee-table.glb'),
-    loader.loadAsync('models/web/dining-table.glb')
+    loader.loadAsync('models/web/dining-table.glb'),
+    loader.loadAsync('models/web/outdoor-seating.glb')
   ]);
   const metal = new THREE.MeshStandardMaterial({color: 0x555e66, metalness: .82, roughness: .34, side: THREE.DoubleSide});
   const renderModel = (model, name) => {
@@ -112,8 +113,9 @@ export async function installCustomerModels(scene, loader, isMobile) {
     carport.add(model);
     return model;
   };
-  const coffeeTable = installFurniture(coffeeAsset, 'CustomerCoffeeTable', [-1.2, .04, .72]);
+  const coffeeTable = installFurniture(coffeeAsset, 'CustomerCoffeeTable', [-1.05, .04, .55]);
   const diningTable = installFurniture(diningAsset, 'CustomerDiningTable', [.95, .04, -.40]);
+  const seating = installFurniture(seatingAsset, 'CustomerOutdoorSeating', [0, .04, 0]);
   // Match the CAD roof frame (5.5 × 3.5 m), including its rotation in plan.
   const roof = box(carport, 'CustomerCarportRoofCover', [5.5, .045, 3.5], [-.0104, 2.7875, .031], new THREE.MeshStandardMaterial({color: 0x82939a, metalness: .5, roughness: .35}));
   roof.rotation.y = -Math.atan2(1.508962, 5.289146);
@@ -124,7 +126,7 @@ export async function installCustomerModels(scene, loader, isMobile) {
   const lamp = new THREE.PointLight(0xffdfb0, 3, 5, 2);
   lamp.position.set(-2.85, 4.1, -99.85); scene.add(lamp);
 
-  return {gate, movingGate, carport, stairs, door, fence, coffeeTable, diningTable,
+  return {gate, movingGate, carport, stairs, door, fence, coffeeTable, diningTable, seating,
     animate(progress) {
       const open = THREE.MathUtils.smoothstep(progress, .45, .625);
       const travel = open * 5.9;
