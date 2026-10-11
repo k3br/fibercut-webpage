@@ -51,6 +51,27 @@ export async function installEnvironment(scene, root, loader, isMobile) {
   // End paved surfaces at the back of the stair building. The existing
   // grass ground continues beyond this line, including the contact backdrop.
   root.updateMatrixWorld(true);
+  // Quiet rear elevations keep the fence presentation in focus. Share plain
+  // materials and add only a thin flat roof, matching the garage's dark steel.
+  const roadsideWhite = new THREE.MeshStandardMaterial({color:0xe8e8e3,roughness:.95});
+  const roadsideRoof = new THREE.MeshStandardMaterial({color:0x252c30,metalness:.75,roughness:.38});
+  for (const name of ['House0','House2']) {
+    const house = root.getObjectByName(name);
+    if (!house?.isMesh) continue;
+    house.material = roadsideWhite;
+    const bounds = new THREE.Box3().setFromObject(house);
+    const size = bounds.getSize(new THREE.Vector3());
+    const centre = bounds.getCenter(new THREE.Vector3());
+    const roof = new THREE.Mesh(new THREE.BoxGeometry(size.x+.16,.15,size.z+.16),roadsideRoof);
+    roof.name = `${name}FlatRoof`;
+    roof.position.set(centre.x,bounds.max.y+.075,centre.z);
+    roof.castShadow = !isMobile;
+    roof.receiveShadow = true;
+    scene.add(roof);
+    scene.updateMatrixWorld(true);
+    // Preserve world dimensions and alignment under the base GLB transform.
+    root.attach(roof);
+  }
   for (const name of ['Road','Driveway']) {
     const surface = root.getObjectByName(name);
     if (!surface?.isMesh) continue;
