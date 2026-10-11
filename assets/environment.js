@@ -8,18 +8,20 @@ import * as THREE from 'three';
 // Roadside background: original flat-roof House0/House2 volumes from the base
 // scene, with window/accent overlays hidden; no additional house downloads.
 // Garage and woodshed: original procedural project models, no external assets.
+// survey-scanner: original stylized Leica RTC360-inspired illustration.
 
 // Shared landscape assets; repeated background planting uses instancing.
 export async function installEnvironment(scene, root, loader, isMobile) {
   const textures = new THREE.TextureLoader();
-  const [oak, pine, naturalTree, sky, grass, garage, woodshed] = await Promise.all([
+  const [oak, pine, naturalTree, sky, grass, garage, woodshed, scannerAsset] = await Promise.all([
     loader.loadAsync('assets/environment/tree-oak.glb'),
     loader.loadAsync('assets/environment/tree-pine.glb'),
     loader.loadAsync('assets/environment/tree-natural.glb'),
     textures.loadAsync('assets/environment/sky.webp'),
     textures.loadAsync('assets/environment/grass.webp'),
     loader.loadAsync('assets/environment/garage.glb'),
-    loader.loadAsync('assets/environment/woodshed.glb')
+    loader.loadAsync('assets/environment/woodshed.glb'),
+    loader.loadAsync('assets/environment/survey-scanner.glb')
   ]);
   sky.colorSpace = THREE.SRGBColorSpace;
   sky.mapping = THREE.EquirectangularReflectionMapping;
@@ -81,6 +83,26 @@ export async function installEnvironment(scene, root, loader, isMobile) {
     });
     scene.add(house);
   }
+  const scanner = scannerAsset.scene;
+  scanner.name = 'LeicaSurveyScanner';
+  scanner.position.set(-.3,.035,-92.65);
+  scanner.rotation.y = -2.54;
+  scene.add(scanner);
+  const scannerHead = new THREE.Group();
+  scannerHead.name = 'RotatingMeasurementHead';
+  scannerHead.position.y = 1.62;
+  scanner.add(scannerHead);
+  scene.updateMatrixWorld(true);
+  const headParts = [];
+  scanner.traverse(o => {
+    if (!o.isMesh) return;
+    o.castShadow = !isMobile; o.receiveShadow = true;
+    if (o.name.startsWith('ScannerHead_')) headParts.push(o);
+  });
+  // Reparent with world transforms intact, including GLB quantisation scales.
+  headParts.forEach(part => scannerHead.attach(part));
+  const status = scannerHead.getObjectByName('ScannerHead_StatusGreen');
+  if (status) { status.material.emissive.setHex(0x32591e); status.material.emissiveIntensity = .6; }
   const sites = [
     [-7,-5,5.1], [9,-12,5.8], [-8,-23,6], [10,-30,5.2],
     [-8,-43,5.5], [11,-51,6.3], [-8,-60,5], [11,-69,5.7],
@@ -195,4 +217,11 @@ export async function installEnvironment(scene, root, loader, isMobile) {
       batch.computeBoundingSphere(); scene.add(batch);
     });
   }
+  return {
+    scanner,
+    animate(time, reducedMotion = false) {
+      // A slow instrument sweep suggests measurement; tripod stays fixed.
+      scannerHead.rotation.y = reducedMotion ? 0 : time * .00018;
+    }
+  };
 }

@@ -23,6 +23,7 @@ a visible website credit. No Poly Haven website preview renders are used.
 
 `assets/environment/tree-natural.glb`, `assets/environment/garage.glb`,
 `assets/environment/woodshed.glb`, `models/web/coffee-table.glb`,
+`assets/environment/survey-scanner.glb`,
 `models/web/dining-table.glb` (retained but no longer loaded),
 `models/web/outdoor-seating.glb` and `models/web/pool-table.glb` were built from
 procedural geometry for this project, with colour-only materials. They were
@@ -30,6 +31,11 @@ not downloaded from a model marketplace, and contain no third-party textures.
 The local construction scripts were reviewed during this audit.
 The separate CC0 house preparation source is retained in `scripts/build-houses.mjs`.
 Original outbuilding geometry is retained in `scripts/build-outbuildings.mjs`.
+Scanner geometry is retained in `scripts/build-scanner.mjs`. It is a stylized
+original illustration referencing Leica RTC360, not a manufacturer-provided
+CAD model or an exact product replica. No manufacturer photos, model files or
+logo assets are included. Leica is a third-party brand referred to by the page.
+Visual reference: https://shop.leica-geosystems.com/reality-capture/rtc/leica-rtc360-laser-scanner/buy
 The prepared CC0 house exports are retained but no longer loaded. The roadside
 uses the existing flat-roof House0/House2 volumes of the base scene. Only garage
 and woodshed are additional loaded building models, totalling 26,240 bytes.

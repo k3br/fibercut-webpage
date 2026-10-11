@@ -30,3 +30,8 @@ are loaded as additional buildings, totalling 26,240 bytes without image texture
 Build the original outbuildings with the same packages:
 
     node scripts/build-outbuildings.mjs
+
+The original scanner illustration is generated with `node scripts/build-scanner.mjs`
+using the same build packages. Its compressed GLB is 45,368 bytes with no image
+textures. A separate head group rotates in the environment; the tripod is static.
+See THIRD_PARTY_NOTICES.md for the Leica product reference and provenance.

@@ -147,6 +147,7 @@ addEnvironmentShell();
 
 let root = null;
 let customerModels;
+let environmentModels;
 let targetProgress = 0;
 let smoothProgress = 0;
 let smoothScroll;
@@ -226,6 +227,7 @@ function render(t = 0) {
 
   updateCamera(smoothProgress);
   animateGate(smoothProgress);
+  environmentModels?.animate(t,reduceMotion);
   renderer.render(scene, camera);
   requestAnimationFrame(render);
 }
@@ -423,7 +425,7 @@ async function bootScene() {
       const localAlignment = obj.matrixWorld.clone().invert().multiply(fenceAlignment).multiply(obj.matrixWorld);
       obj.geometry = obj.geometry.clone().applyMatrix4(localAlignment);
     });
-    await installEnvironment(scene, root, gltfLoader, isMobile);
+    environmentModels = await installEnvironment(scene, root, gltfLoader, isMobile);
     batchStaticStructures(scene,[root,customerModels.carport,customerModels.stairs,customerModels.fence]);
 
     targetProgress = getProgress();

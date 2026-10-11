@@ -12,6 +12,7 @@ Upload these files and folders to the same GitHub Pages folder:
   assets/environment/house-pavilion.glb
   assets/environment/garage.glb
   assets/environment/woodshed.glb
+  assets/environment/survey-scanner.glb
   fibercut-scene.glb
   models/web/customer-gate.glb
   models/web/4_nadstresek.optimized.glb
