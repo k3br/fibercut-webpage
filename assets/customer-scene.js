@@ -2,7 +2,7 @@ import * as THREE from 'three';
 
 // Model provenance: ../THIRD_PARTY_NOTICES.md. Customer authorship of supplied
 // CAD was confirmed by the site owner on 2026-10-11; these assets are not CC0.
-// Coffee table, lounge seating and pool table are original procedural project
+// Coffee table and lounge seating are original procedural project
 // models with colour-only materials, not third-party marketplace downloads.
 
 // Remove the CAD plan rotation so the roof and columns follow the pad edges.
@@ -15,13 +15,12 @@ function alignedCarportPoint([x,y,z]) {
 
 // Positions are in metres. Preserve the original CAD groups for animation.
 export async function installCustomerModels(scene, loader, isMobile) {
-  const [gateAsset, carportAsset, stairAsset, fenceAsset, coffeeAsset, poolAsset, seatingAsset] = await Promise.all([
+  const [gateAsset, carportAsset, stairAsset, fenceAsset, coffeeAsset, seatingAsset] = await Promise.all([
     loader.loadAsync('models/web/customer-gate.glb'),
     loader.loadAsync('models/web/4_nadstresek.optimized.glb'),
     loader.loadAsync('models/web/3_stopnice.optimized.glb'),
     loader.loadAsync('models/web/2_ograja.optimized.glb'),
     loader.loadAsync('models/web/coffee-table.glb'),
-    loader.loadAsync('models/web/pool-table.glb'),
     loader.loadAsync('models/web/outdoor-seating.glb')
   ]);
   const metal = new THREE.MeshStandardMaterial({color: 0x555e66, metalness: .82, roughness: .34, side: THREE.DoubleSide});
@@ -123,7 +122,6 @@ export async function installCustomerModels(scene, loader, isMobile) {
     return model;
   };
   const coffeeTable = installFurniture(coffeeAsset, 'CustomerCoffeeTable', [-1.05, .04, .55]);
-  const poolTable = installFurniture(poolAsset, 'CustomerPoolTable', [1.4, .04, 0]);
   const seating = installFurniture(seatingAsset, 'CustomerOutdoorSeating', [0, .04, 0]);
   // Match the CAD roof frame (5.5 × 3.5 m), including its rotation in plan.
   const roof = box(carport, 'CustomerCarportRoofCover', [5.5, .045, 3.5], [-.0104, 2.7875, .031], new THREE.MeshStandardMaterial({color: 0x82939a, metalness: .5, roughness: .35}));
@@ -154,7 +152,7 @@ export async function installCustomerModels(scene, loader, isMobile) {
   const lamp = new THREE.PointLight(0xffdfb0, 3, 5, 2);
   lamp.position.set(-2.85, 4.1, -99.85); scene.add(lamp);
 
-  return {gate, movingGate, carport, stairs, door, fence, coffeeTable, poolTable, seating,
+  return {gate, movingGate, carport, stairs, door, fence, coffeeTable, seating,
     animate(progress) {
       const open = THREE.MathUtils.smoothstep(progress, .45, .625);
       const travel = open * 5.9;

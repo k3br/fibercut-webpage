@@ -21,7 +21,6 @@ Upload these files and folders to the same GitHub Pages folder:
   models/web/coffee-table.glb
   models/web/dining-table.glb
   models/web/outdoor-seating.glb
-  models/web/pool-table.glb
   THIRD_PARTY_NOTICES.md
   licenses/
 
