@@ -40,6 +40,10 @@ export async function installCustomerModels(scene, loader, isMobile) {
   gate.rotation.y = -.307;
   // The right fixed post meets the roadside fence on the curb centreline.
   gate.position.set(-5.6646, .03, -74.5);
+  // Detached rail from the discarded CAD wall/stair assembly, floating
+  // above the fixed gate return. It is not part of the moving gate leaf.
+  const detachedRail = gate.getObjectByName('CAD_part_032');
+  if (detachedRail) detachedRail.visible = false;
   const movingGate = gate.getObjectByName('SlidingGateAssembly');
   if (!movingGate || movingGate.children.length !== 16) throw new Error('Customer sliding gate assembly is missing parts');
 

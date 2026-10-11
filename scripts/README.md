@@ -24,9 +24,9 @@ site's existing decoder; Node build packages are not website dependencies.
 
 Licence inventory: ../THIRD_PARTY_NOTICES.md.
 
-The environment currently reuses the pavilion, plus the original garage and
-woodshed from build-outbuildings.mjs. Villa and cantilever exports are unused.
-Active background models total 39,012 bytes. All have no external image textures.
+The prepared house exports are currently unused. The roadside reuses the base
+scene's flat-roof volumes. Only garage and woodshed from build-outbuildings.mjs
+are loaded as additional buildings, totalling 26,240 bytes without image textures.
 Build the original outbuildings with the same packages:
 
     node scripts/build-outbuildings.mjs

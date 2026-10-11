@@ -5,20 +5,19 @@ import * as THREE from 'three';
 // grass / sky: Poly Haven grass_ground and kloofendal_48d_partly_cloudy_puresky
 // (CC0-1.0), polyhaven.com/license; resized original texture/HDRI downloads.
 // tree-natural: original procedural project geometry, no downloaded model.
-// Background house backs: Kenney City Kit Suburban 2.0, building-type-g (CC0-1.0).
-// Neutral roof colours, metre scale and compressed geometry; see notices.
+// Roadside background: original flat-roof House0/House2 volumes from the base
+// scene, with window/accent overlays hidden; no additional house downloads.
 // Garage and woodshed: original procedural project models, no external assets.
 
 // Shared landscape assets; repeated background planting uses instancing.
 export async function installEnvironment(scene, root, loader, isMobile) {
   const textures = new THREE.TextureLoader();
-  const [oak, pine, naturalTree, sky, grass, pavilion, garage, woodshed] = await Promise.all([
+  const [oak, pine, naturalTree, sky, grass, garage, woodshed] = await Promise.all([
     loader.loadAsync('assets/environment/tree-oak.glb'),
     loader.loadAsync('assets/environment/tree-pine.glb'),
     loader.loadAsync('assets/environment/tree-natural.glb'),
     textures.loadAsync('assets/environment/sky.webp'),
     textures.loadAsync('assets/environment/grass.webp'),
-    loader.loadAsync('assets/environment/house-pavilion.glb'),
     loader.loadAsync('assets/environment/garage.glb'),
     loader.loadAsync('assets/environment/woodshed.glb')
   ]);
@@ -40,7 +39,8 @@ export async function installEnvironment(scene, root, loader, isMobile) {
   root.traverse(o => {
     // Replace background props only. The customer balcony facade and its
     // mounted railings remain the product presentation in the foreground.
-    if (/^House(?:Accent|Window)?[0234]$/.test(o.name)) o.visible = false;
+    if (/^House[02]$/.test(o.name)) o.visible = true;
+    if (/^House(?:Accent|Window)?[34]$|^House(?:Accent|Window)[02]$/.test(o.name)) o.visible = false;
     if (/^(Tree|Bush)/i.test(o.name)) o.visible = false;
     if (!o.isMesh) return;
     const mats = [o.material].flat();
@@ -66,14 +66,12 @@ export async function installEnvironment(scene, root, loader, isMobile) {
     surface.geometry = geometry;
   }
   const residences = [
-    [pavilion, 10, -18, Math.PI/2], [pavilion, 10, -58, -Math.PI/2],
     [garage, 6.9, -79, -Math.PI/2], [woodshed, -5.6, -80, Math.PI/2]
   ];
   for (const [asset,x,z,rotation] of residences) {
     const house = asset.scene.clone(true);
     house.name = `BackgroundResidence_${z}`;
-    // The first prop presents a quiet rear elevation, with the same low roof
-    // as the second. Outbuilding entrances face inward across the driveway.
+    // Outbuilding entrances face inward across the driveway.
     house.rotation.y = rotation;
     house.position.set(x,.02,z);
     house.traverse(o => {
