@@ -10,7 +10,7 @@ import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { installCustomerModels, sampleJourney } from './customer-scene.js';
 import { installEnvironment } from './environment.js';
-import { scrollToJourney } from './camera-timing.js';
+import { scrollToJourney, chapterHeights } from './camera-timing.js';
 import { batchStaticStructures } from './optimize-scene.js';
 import Lenis from './vendor/lenis/lenis.js';
 
@@ -153,6 +153,19 @@ let smoothProgress = 0;
 let smoothScroll;
 let chapterDirty = true;
 const chapters = [...document.querySelectorAll('#story [data-chapter]')];
+function alignChapterLayout() {
+  const minimums=chapters.map(section=>{
+    const style=getComputedStyle(section);
+    const copy=section.querySelector('.copy,.contact-card');
+    return copy.getBoundingClientRect().height+parseFloat(style.paddingTop)+parseFloat(style.paddingBottom)
+      +(section.querySelector('footer')?.getBoundingClientRect().height||0)+32;
+  });
+  chapterHeights(window.innerHeight,minimums).forEach((height,i)=>{
+    chapters[i].style.minHeight=`${height}px`;
+  });
+  smoothScroll?.resize();
+  chapterDirty=true;
+}
 let pointerX = 0;
 let pointerY = 0;
 let started = false;
@@ -233,6 +246,7 @@ function render(t = 0) {
 }
 
 function resize() {
+  alignChapterLayout();
   const mobile = window.innerWidth <= 800;
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
@@ -428,6 +442,8 @@ async function bootScene() {
     environmentModels = await installEnvironment(scene, root, gltfLoader, isMobile);
     batchStaticStructures(scene,[root,customerModels.carport,customerModels.stairs,customerModels.fence]);
 
+    await document.fonts.ready;
+    alignChapterLayout();
     targetProgress = getProgress();
     smoothProgress = scrollToJourney(targetProgress);
     updateChapter(targetProgress);

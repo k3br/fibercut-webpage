@@ -3,6 +3,7 @@ import { sampleJourney } from './customer-scene.js';
 const turns = [
   [.27,.29,.40,.42],
   [.655,.675,.755,.78],
+  [.749,.755,.773,.781], // give the Leica scanner a readable measurement pass
   [.775,.80,1,1.02], // keep the stair climb at walking pace
   [.875,.90,1,1.02] // extra room for the final turn on the landing
 ];
@@ -53,4 +54,24 @@ export function scrollToJourney(scroll) {
   const h=distances[high]-distances[low],t=(scroll-distances[low])/h,t2=t*t,t3=t2*t;
   return (2*t3-3*t2+1)*low/count+(t3-2*t2+t)*h*tangents[low]
     +(-2*t3+3*t2)*high/count+(t3-t2)*h*tangents[high];
+}
+
+export function journeyToScroll(progress) {
+  let low=0,high=1;
+  for(let i=0;i<40;i++) {
+    const middle=(low+high)/2;
+    if(scrollToJourney(middle)<progress)low=middle;else high=middle;
+  }
+  return (low+high)/2;
+}
+
+// Chapter transitions share the camera timeline rather than equal page heights.
+export function chapterHeights(viewport,minimums) {
+  const boundaries=[0,.18,.285,.43,.635,.749,.781,1].map(journeyToScroll);
+  let travel=viewport*7;
+  for(let i=0;i<7;i++) {
+    const extra=(i===0||i===6)?viewport/2:0;
+    travel=Math.max(travel,(minimums[i]-extra)/(boundaries[i+1]-boundaries[i]));
+  }
+  return minimums.map((_,i)=>travel*(boundaries[i+1]-boundaries[i])+((i===0||i===6)?viewport/2:0));
 }
