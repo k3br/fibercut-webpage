@@ -10,7 +10,7 @@ import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { installCustomerModels, sampleJourney } from './customer-scene.js';
 import { installEnvironment } from './environment.js';
-import { scrollToJourney, chapterHeights } from './camera-timing.js';
+import { scrollToJourney, chapterHeights, compactContactProgress } from './camera-timing.js';
 import { batchStaticStructures } from './optimize-scene.js';
 import Lenis from './vendor/lenis/lenis.js';
 
@@ -153,6 +153,7 @@ let smoothProgress = 0;
 let smoothScroll;
 let chapterDirty = true;
 const chapters = [...document.querySelectorAll('#story [data-chapter]')];
+let storyHeights;
 function alignChapterLayout() {
   const minimums=chapters.map(section=>{
     const style=getComputedStyle(section);
@@ -166,7 +167,8 @@ function alignChapterLayout() {
     return contentHeight+parseFloat(style.paddingTop)+parseFloat(style.paddingBottom)
       +(section.querySelector('footer')?.getBoundingClientRect().height||0)+32;
   });
-  chapterHeights(window.innerHeight,minimums).forEach((height,i)=>{
+  storyHeights=chapterHeights(window.innerHeight,minimums);
+  storyHeights.forEach((height,i)=>{
     chapters[i].style.minHeight=`${height}px`;
   });
   smoothScroll?.resize();
@@ -177,6 +179,7 @@ let pointerY = 0;
 let started = false;
 
 function getProgress() {
+  if(storyHeights)return compactContactProgress(smoothScroll?.scroll??window.scrollY,window.innerHeight,storyHeights);
   if (smoothScroll) return THREE.MathUtils.clamp(smoothScroll.scroll / Math.max(1,smoothScroll.limit),0,1);
   const max = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
   return THREE.MathUtils.clamp(window.scrollY / max, 0, 1);

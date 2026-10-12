@@ -73,5 +73,19 @@ export function chapterHeights(viewport,minimums) {
     const extra=(i===0||i===6)?viewport/2:0;
     travel=Math.max(travel,(minimums[i]-extra)/(boundaries[i+1]-boundaries[i]));
   }
-  return minimums.map((_,i)=>travel*(boundaries[i+1]-boundaries[i])+((i===0||i===6)?viewport/2:0));
+  return minimums.map((minimum,i)=>i===6?minimum:travel*(boundaries[i+1]-boundaries[i])+((i===0)?viewport/2:0));
+}
+
+export function compactContactProgress(scroll,viewport,heights) {
+  const before=heights.slice(0,6).reduce((a,b)=>a+b,0);
+  const start=before-viewport/2;
+  const boundary=journeyToScroll(.781);
+  const originalTravel=start/boundary;
+  if(scroll<=start)return Math.max(0,scroll/originalTravel);
+  const remaining=before+heights[6]-viewport-start;
+  const t=Math.max(0,Math.min(1,(scroll-start)/remaining));
+  // Match incoming speed, then complete the landing without empty page space.
+  const slope=remaining/(originalTravel-start);
+  const curve=(-2*t*t*t+3*t*t)+(2*t*t*t-3*t*t+t)*slope;
+  return boundary+(1-boundary)*curve;
 }
