@@ -146,9 +146,9 @@ h1 em, h2 em { font-family: Georgia, "Times New Roman", serif; font-weight: 400;
 .scroll-cue i { width: 54px; height: 1px; background: currentColor; overflow: hidden; position: relative; }
 .scroll-cue i:after { content: ""; position: absolute; inset: 0; background: var(--acid); transform: translateX(-100%); animation: scrollLine 1.8s ease-in-out infinite; }
 
-.contact-section { min-height: 118vh; align-items: flex-end; padding: 18vh var(--pad) 32px; flex-wrap: wrap; }
+.contact-section { min-height: 118vh; flex-direction: column; align-items: stretch; padding: 18vh var(--pad) 32px; }
 .reveal-section { min-height: 110vh; }
-.contact-card { margin-left: auto; width: min(800px, 65%); padding: clamp(30px, 5vw, 72px); background: rgba(10,11,13,.65); border: 1px solid rgba(255,255,255,.10); }
+.contact-card { flex: 1 0 auto; margin-left: auto; width: min(800px, 65%); padding: clamp(30px, 5vw, 72px); background: rgba(10,11,13,.65); border: 1px solid rgba(255,255,255,.10); }
 .contact-card h2 { max-width: 900px; }
 .contact-grid { margin-top: 48px; padding-top: 24px; border-top: 1px solid rgba(255,255,255,.18); display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
 .contact-grid > div { display: grid; align-content: start; gap: 9px; }
@@ -466,8 +466,7 @@ body.is-loading { overflow: hidden; }
         <p>Nekaj naših izdelkov si lahko ogledate v galeriji.</p><a class="text-link" href="gallery.html">Oglejte si galerijo →</a>
       </div>
       <footer>
-        <span>FIBERCUT / MATIC PODLOGAR S.P.</span>
-        <span>KOVINA PO MERI / SKRB ZA VSAK DETAJL</span>
+        <span>MATIC PODLOGAR S.P.</span>
       <a class="site-credit" href="https://www.kodica.si" target="_blank" rel="noopener noreferrer">crafted by <img src="assets/kodica-logo.png" alt="Kodica" width="100" height="32" loading="lazy"></a></footer>
     </section>
   </main>

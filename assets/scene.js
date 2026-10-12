@@ -157,7 +157,13 @@ function alignChapterLayout() {
   const minimums=chapters.map(section=>{
     const style=getComputedStyle(section);
     const copy=section.querySelector('.copy,.contact-card');
-    return copy.getBoundingClientRect().height+parseFloat(style.paddingTop)+parseFloat(style.paddingBottom)
+    // Measure the contact card's content, not the stretch allocated by the
+    // timeline, so repeated resizes cannot grow the final section each time.
+    const previousFlex=copy.style.flex;
+    if(copy.classList.contains('contact-card'))copy.style.flex='0 0 auto';
+    const contentHeight=copy.getBoundingClientRect().height;
+    copy.style.flex=previousFlex;
+    return contentHeight+parseFloat(style.paddingTop)+parseFloat(style.paddingBottom)
       +(section.querySelector('footer')?.getBoundingClientRect().height||0)+32;
   });
   chapterHeights(window.innerHeight,minimums).forEach((height,i)=>{
